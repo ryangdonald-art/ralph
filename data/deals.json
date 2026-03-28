@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "company": "Amalfi Foods",
+    "title": "Supplier rollout opportunity",
+    "stage": "New",
+    "value": 250000,
+    "nextAction": "Start outreach",
+    "notes": "Potential national white-label rollout."
+  },
+  {
+    "id": 2,
+    "company": "Dough Re Mi",
+    "title": "Forecourt bakery pilot",
+    "stage": "Discussion",
+    "value": 480000,
+    "nextAction": "Review pilot economics",
+    "notes": "High-fit retail bakery opportunity."
+  }
+]

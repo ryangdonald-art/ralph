@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RALPH MVP</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">RALPH</div>
+        <h1>Today Mode</h1>
+      </div>
+      <button class="primary-btn" id="openFormBtn">+ New Deal</button>
+    </header>
+
+    <main class="grid">
+      <section class="card">
+        <h2>What RALPH does</h2>
+        <p>Finds opportunities, tracks deals, starts conversations, and helps turn them into revenue.</p>
+      </section>
+
+      <section class="card">
+        <h2>Today’s Priorities</h2>
+        <ul class="priority-list">
+          <li>Review hot deals</li>
+          <li>Start outreach on new opportunities</li>
+          <li>Check market signals</li>
+        </ul>
+      </section>
+
+      <section class="card card-wide">
+        <div class="section-head">
+          <h2>Deals</h2>
+          <span class="muted">MVP demo data</span>
+        </div>
+        <div id="deals" class="stack"></div>
+      </section>
+
+      <section class="card">
+        <h2>Intelligence</h2>
+        <div id="signals" class="stack"></div>
+      </section>
+
+      <section class="card">
+        <h2>Posts</h2>
+        <div id="posts" class="stack"></div>
+      </section>
+    </main>
+
+    <div class="modal hidden" id="dealModal">
+      <div class="modal-panel">
+        <div class="section-head">
+          <h2>New Deal</h2>
+          <button class="ghost-btn" id="closeFormBtn">Close</button>
+        </div>
+
+        <form id="dealForm" class="form">
+          <input name="company" placeholder="Company" required />
+          <input name="title" placeholder="Opportunity title" required />
+          <input name="stage" placeholder="Stage" value="New" />
+          <input name="value" placeholder="Estimated value" type="number" />
+          <input name="nextAction" placeholder="Next action" value="Review" />
+          <textarea name="notes" placeholder="Notes"></textarea>
+          <button class="primary-btn" type="submit">Save deal</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
