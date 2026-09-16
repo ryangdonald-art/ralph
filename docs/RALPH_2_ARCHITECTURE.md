@@ -1,111 +1,96 @@
 # RALPH 2.0 — Foundation Architecture Audit
 
-## Status
-Phase 0 audit initiated 2026-09-16. This document records what is verified from the repository and separates it from future architecture.
+## Status — 2026-09-16
+The foundation boundary is now implemented on `ralph-2-foundation`. This document distinguishes VERIFIED, PROPOSED and BLOCKED capability. Nothing in this document implies production readiness where authentication, real persistence or runtime verification is absent.
 
-## Current state
-RALPH is currently an early-stage Node/Express MVP, not a production autonomous intelligence platform.
+## VERIFIED
+- Node/Express application with static frontend.
+- Existing JSON data for deals, signals and posts remains intact as temporary persistence/seed material.
+- Express routes are wired through service and repository boundaries; business routes no longer directly perform filesystem persistence.
+- JSON filesystem access is isolated to `src/repositories/jsonRepository.js`.
+- Central configuration rejects storage providers other than `json`; Supabase cannot be falsely selected as working.
+- Deal validation is reusable and rejects malformed/oversized input rather than silently truncating it.
+- Request IDs are generated for HTTP requests and returned in `X-Request-ID`; arbitrary inbound IDs are not trusted yet.
+- Structured JSON telemetry exists with key-based secret redaction.
+- Safe application error responses include error code, safe message and request ID; stack traces are not returned by the application error handler.
+- Frontend rendering was hardened to avoid injecting untrusted API/user values through `innerHTML`.
+- Temporary JSON writes use a write-then-rename strategy and corrupted/missing/non-array JSON fails loudly rather than becoming an empty dataset.
+- Deterministic Cash Flow Danger logic exists and is not exposed as production intelligence in the UI.
+- Cash detector keeps cash, receivables, overdue receivables, forecasts and commitments distinct. Only explicitly `COMMITTED` production requirements enter the immediate liquidity requirement; FORECAST and unknown-status production requirements remain separate.
+- V1 permission contracts cap material execution at Level 3 (execute with approval); Level 4 is blocked by the domain contract.
+- Approval/idempotency guard, RALPH/Sherlock/RAT contracts and database contract exist.
+- Node test suite exists and has been expanded for cash distinctions, validation and corrupt JSON behavior.
 
-Verified repository structure:
-- Node/Express server in `src/server.js`.
-- Static frontend in `public/`.
-- Local JSON persistence in `data/` for deals, signals and posts.
-- Today Mode, Deals, Intelligence and Posts UI concepts exist.
-- `POST /api/deals` mutates local `data/deals.json`.
-- No database client dependency is present in `package.json`.
-- No OpenAI SDK or other model-provider SDK is present in `package.json`.
-- No repository Supabase migrations/configuration are present in the audited tree.
-- No production authentication/authorization layer is visible in the current server.
-- No automated test script is defined in `package.json`.
+## VERIFIED LIMITATIONS / RISKS
+- Authentication and authorization are not implemented. `POST /api/deals` is therefore DEVELOPMENT / NOT PRODUCTION SAFE.
+- JSON persistence is synchronous and local-file based. It is not production-grade durable/concurrent storage.
+- ID allocation for deals is derived from current JSON rows and is not concurrency safe.
+- Request IDs are generated locally only; trusted upstream propagation policy is not implemented.
+- Telemetry is local stdout/stderr only and has no durable audit sink.
+- Agent contracts exist, but there is no live AI provider/model execution.
+- Cash detector uses synthetic/controlled inputs only; no real financial source provenance or freshness enforcement is connected.
+- Existing `src/main.py` appears unrelated to the Node runtime and remains for later dead-code confirmation/removal; it has not been deleted.
+- Repository is public; no secrets should ever be committed. Real Dealworx/DRM business data must not be placed in the public repository.
 
-The README explicitly describes the repository as a clean MVP workspace, states that data is stored in local JSON, and anticipates replacement with PostgreSQL.
+## TEST STATUS
+COMMITTED BUT NOT RUNTIME VERIFIED in this execution environment.
 
-## Working components worth preserving
-1. Existing repository and Git history.
-2. RALPH naming and Today Mode concept.
-3. Simple mobile-friendly frontend as a reference implementation.
-4. Deals and signals concepts as potential seed/domain data.
-5. Health endpoint and basic Express serving pattern where useful during migration.
+A runtime checkout attempt could not reach GitHub from the execution container, so `npm ci`, `npm test`, `npm run check`, startup and endpoint smoke tests have not been honestly claimed as passed. The code/test changes remain reviewable in the draft PR and require an environment with repository checkout/network access for the quality gate.
 
-These are concepts/assets to preserve, not architectural constraints.
+## CASH DETECTOR STATUS
+VERIFIED BY CODE REVIEW / COMMITTED, NOT RUNTIME VERIFIED.
 
-## Gaps against RALPH 2.0
-- Durable relational persistence.
-- Supabase/Postgres integration.
-- Authentication and authorization.
-- Row-level security.
-- Server-side AI provider integration.
-- Agent orchestration and run persistence.
-- Evidence provenance.
-- Detector engine.
-- Sherlock investigation pipeline.
-- RAT adversarial pipeline.
-- Decision/priority engine.
-- Approval and controlled execution workflow.
-- Outcome capture and learning loop.
-- Economic value ledger.
-- Production telemetry and structured audit trail.
-- Tests and migration tooling.
+Economic invariants encoded:
+- cash != revenue
+- cash != profit
+- receivable != cash
+- not-yet-due receivable != overdue receivable
+- forecast payment != committed payment
+- unknown receipt date remains unknown
+- duplicate liability IDs count once
+- production requirement affects immediate liquidity only when explicitly COMMITTED
+- forecast/unknown production requirements remain separately visible
 
-## Technical debt / immediate risks
-### Local file persistence
-Synchronous filesystem reads/writes are unsuitable as production state. They create durability, concurrency and deployment risks.
+The detector must remain off the production UI until source provenance, freshness, testing and the auditable closed loop exist.
 
-### Missing input validation
-`POST /api/deals` accepts request body fields directly with only simple defaults/conversion. A production API requires schema validation and bounded inputs.
+## STORAGE STATUS
+TEMPORARY JSON ONLY. Route → service → repository separation is now in place so a future Supabase repository can replace JSON without rewriting business routes/domain logic. JSON files must remain until migration is verified.
 
-### Missing access control
-The audited server exposes read APIs and deal creation without an application authentication/authorization layer.
+## SUPABASE STATUS
+BLOCKED. The connected Supabase context previously exposed no RALPH project. No project, migration or paid infrastructure has been created or modified.
 
-### Frontend injection risk
-The current frontend builds HTML strings using values returned from APIs and assigns them via `innerHTML`. User-controlled deal fields can therefore become an XSS risk unless escaped/sanitized or rendered safely.
+## AUTH STATUS
+BLOCKED / NOT PRODUCTION READY. Authentication, authorization and RLS belong to the next architecture gate with Supabase/real persistence.
 
-### No auditable intelligence layer
-Current `signals.json` is demo persistence. There is no evidence trail showing why a signal exists, what source produced it, or what action/outcome followed.
+## AI PROVIDER STATUS
+PROPOSED / NOT CONNECTED. Agent/provider contracts exist; no OpenAI, Anthropic or Google model execution is claimed.
 
-## Supabase status
-The Supabase connection available during this audit returned zero visible projects. Therefore no claim is made that a RALPH Supabase project does or does not exist elsewhere.
-
-STOP CONDITION: do not create a paid Supabase project or modify an unknown production database until the correct existing project/account is established or Ryan explicitly authorizes creation.
-
-## Proposed V1 architecture
-Keep the architecture deliberately small until one economic loop is proven.
-
+## Proposed V1 closed loop
 ```text
-DATA SOURCE
-   ↓
-INGESTION / VALIDATION
-   ↓
+REAL DATA
+  ↓
+VALIDATION / PROVENANCE
+  ↓
 POSTGRES / SUPABASE
-   ↓
-CASH FLOW DETECTOR
-   ↓
-SIGNAL
-   ↓
+  ↓
+CASH FLOW DANGER
+  ↓
 SHERLOCK
-   ↓
-EVIDENCE + FINDING
-   ↓
+  ↓
 RAT
-   ↓
-CHALLENGE / REVISED CONFIDENCE
-   ↓
+  ↓
 RALPH
-   ↓
-ACTION | DECISION | ALERT | TASK | FOLLOW-UP | ESCALATION | KILL
-   ↓
+  ↓
 HUMAN APPROVAL
-   ↓
-CONTROLLED EXECUTION
-   ↓
+  ↓
+CONTROLLED ACTION
+  ↓
 OUTCOME
-   ↓
-VALUE + LESSON
+  ↓
+LEARN / ECONOMIC VALUE
 ```
 
-## Minimum database model
-Initial production model should contain only the objects required for the closed loop:
-
+## Minimum proposed database model
 - `entities`
 - `signals`
 - `evidence`
@@ -116,76 +101,36 @@ Initial production model should contain only the objects required for the closed
 - `agent_runs`
 - `approvals`
 
-All records should use stable IDs, timestamps, source provenance and explicit relationships. Facts/inferences generated by models must never overwrite source evidence.
+The detailed proposed contract is in `docs/RALPH_2_DATABASE_CONTRACT.md`. Vector storage remains excluded until a demonstrated retrieval requirement exists.
 
-Do not add vector storage until a concrete retrieval use case requires it. Structured relational truth comes first.
-
-## First detector: Cash Flow Danger
-The first detector must model separately:
-- cash in bank
-- expected receipts
-- receipts due
-- receipts overdue
-- committed payments
-- forecast payments
-- production requirements
-- available liquidity
-
-Not-yet-due receivables must never be classified as overdue.
-
-Detector logic must be deterministic/configurable where possible. The model investigates and interprets a detected condition; the model should not invent the underlying financial event.
-
-## Agent boundary
-V1 agents:
-- RALPH — orchestration, prioritization and management output.
-- SHERLOCK — evidence-led investigation and competing hypotheses.
-- RAT — independent adversarial challenge.
-- EXECUTION — permission-controlled action preparation/execution.
-
-Agent implementations must be server-side, auditable and provider-abstracted. OpenAI is the initial provider; provider interfaces should not hard-wire business logic to a specific model.
-
-## Human control
-V1 maximum autonomy is Level 3: execute with approval.
-
-No autonomous financial transactions, contractual commitments, destructive business-record operations or unsupervised high-risk external communications.
-
-## Security baseline
-Before real Dealworx/DRM data is connected:
-- secrets server-side only
+## Security baseline before real data
+- server-side secrets only
 - authenticated users
 - least privilege
 - RLS on business data
-- schema validation on API inputs
-- output encoding/safe DOM rendering
-- immutable/auditable action and approval records
+- schema validation
+- safe DOM rendering/output encoding
+- auditable action and approval records
 - external content treated as untrusted
 - tool authorization separate from model reasoning
 - idempotency for executable actions
+- no real sensitive business data committed to the public repository
 
-## Implementation order
-1. Finish repository audit and document verified gaps.
-2. Resolve correct Supabase project/account status.
-3. Establish database migration strategy and schema on a safe development target.
-4. Replace JSON production persistence while retaining JSON as migration/seed input until verified.
-5. Add authentication/RLS and server-side configuration.
-6. Add agent provider/service abstraction and `agent_runs` audit trail.
-7. Build deterministic Cash Flow Danger detector.
-8. Build Sherlock evidence investigation.
-9. Build RAT challenge.
-10. Build RALPH prioritization/output.
-11. Build human approval workflow.
-12. Build controlled execution boundary.
-13. Capture outcome and economic impact.
-14. Test closed loop with synthetic/controlled data.
-15. Connect real Dealworx/DRM data only after controls pass.
-16. Measure false alerts, human overrides and economic value before adding more detectors.
+## STOP CONDITION
+Feature expansion stops here. Do not add more detectors, specialist agents, vector memory, MCP, browser/computer automation, complex dashboards, multi-model routing, Temporal or LangGraph.
 
-## Definition of first success
-RALPH 2.0 V1 succeeds when one traceable case completes:
+## NEXT ARCHITECTURE GATE
+SUPABASE + AUTHENTICATION + REAL PERSISTENCE.
+
+Cross this gate only when either:
+1. the correct existing RALPH Supabase project is visible and can be inspected safely; or
+2. Ryan explicitly authorizes creation of a new project after plan/cost implications are established.
+
+Before connecting real Dealworx/DRM data, the committed quality gate must also be executed successfully in a runtime-capable environment.
+
+## Definition of first production success
+RALPH 2.0 succeeds only when one traceable real-data case completes:
 
 REAL DATA → DETECT → SHERLOCK → RAT → RALPH → HUMAN APPROVAL → ACTION → OUTCOME → LEARN
 
-and the system can show the evidence, disagreement, decision, approval, result and economic impact without fabricated data.
-
-## Current blocker
-Database implementation is intentionally blocked until the correct Supabase project is visible or explicit authorization is given to create a new project. Repository-safe work may continue on the `ralph-2-foundation` development branch.
+and the evidence, disagreement, decision, approval, result and economic impact remain auditable without fabricated data.
