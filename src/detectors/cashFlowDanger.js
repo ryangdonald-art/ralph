@@ -35,24 +35,53 @@ function sumUnique(items, label) {
   return uniqueById(items, label).reduce((sum, item) => sum + money(item.amount, `${label} amount`), 0);
 }
 
+function classifyProductionRequirements(items) {
+  let committed = 0;
+  let forecast = 0;
+  let unknown = 0;
+  for (const item of uniqueById(items, 'production requirement')) {
+    const amount = money(item.amount, 'production requirement amount');
+    if (item.status === 'COMMITTED') committed += amount;
+    else if (item.status === 'FORECAST') forecast += amount;
+    else unknown += amount;
+  }
+  return { committed, forecast, unknown, total: committed + forecast + unknown };
+}
+
 function detectCashFlowDanger(input, config={}) {
   const threshold = Number.isFinite(config.materialityThreshold) ? config.materialityThreshold : 0;
   const cashInBank = money(input.cashInBank, 'cashInBank');
   const receipts = classifyReceipts(input.receipts || [], input.asOf);
   const committedPayments = sumUnique(input.committedPayments || [], 'committed payment');
   const forecastPayments = sumUnique(input.forecastPayments || [], 'forecast payment');
-  const productionRequirements = sumUnique(input.productionRequirements || [], 'production requirement');
+  const production = classifyProductionRequirements(input.productionRequirements || []);
 
-  // Conservative available liquidity: bank cash plus receipts due today. Future, overdue and unknown-date debtors are not cash.
+  // Bank cash plus receipts due today. Future, overdue and unknown-date receivables remain receivables, not cash.
   const availableLiquidity = cashInBank + receipts.due;
-  const committedRequirement = committedPayments + productionRequirements;
+  // Only explicitly committed production requirements enter the immediate liquidity requirement.
+  const committedRequirement = committedPayments + production.committed;
   const gap = Math.max(0, committedRequirement - availableLiquidity);
   const material = gap > threshold;
 
   return {
-    metrics: { cashInBank, expectedReceipts:receipts.expected, receiptsDue:receipts.due, receiptsOverdue:receipts.overdue, receiptsUnknownDate:receipts.unknownDate, committedPayments, forecastPayments, productionRequirements, availableLiquidity, committedRequirement, liquidityGap:gap },
+    metrics: {
+      cashInBank,
+      expectedReceipts: receipts.expected,
+      receiptsDue: receipts.due,
+      receiptsOverdue: receipts.overdue,
+      receiptsUnknownDate: receipts.unknownDate,
+      committedPayments,
+      forecastPayments,
+      productionRequirements: production.total,
+      committedProductionRequirements: production.committed,
+      forecastProductionRequirements: production.forecast,
+      unknownProductionRequirements: production.unknown,
+      availableLiquidity,
+      committedRequirement,
+      liquidityGap: gap
+    },
     signal: material ? { type:'CASH_FLOW_DANGER', severity: gap > Math.max(threshold * 2, threshold) ? 'HIGH' : 'MATERIAL', exposure:gap, currency:input.currency || 'ZAR', evidenceState:'CALCULATED' } : null
   };
 }
 
-module.exports = { classifyReceipts, detectCashFlowDanger };
+module.exports = { classifyReceipts, classifyProductionRequirements, detectCashFlowDanger };
