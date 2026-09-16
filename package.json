@@ -1,17 +1,16 @@
 {
   "name": "ralph-dev-ready",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "RALPH MVP - clean VS Code-ready workspace",
+  "description": "RALPH 2.0 foundation - controlled migration from MVP",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "test": "node --test",
+    "check": "node --check src/server.js && node --check src/domain/contracts.js && node --check src/detectors/cashFlowDanger.js && node --check src/agents/contracts.js && node --check src/services/executionGuard.js"
   },
-  "dependencies": {
-    "express": "^4.21.2"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.10"
-  }
+  "engines": { "node": ">=20" },
+  "dependencies": { "express": "^4.21.2" },
+  "devDependencies": { "nodemon": "^3.1.10" }
 }
