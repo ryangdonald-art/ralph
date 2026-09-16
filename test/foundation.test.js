@@ -1,20 +1,27 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const { detectCashFlowDanger } = require('../src/detectors/cashFlowDanger');
 const { economicImpact, canExecute, PERMISSION_LEVELS, validateRalphOutput } = require('../src/domain/contracts');
 const { validateSherlockFinding, validateRatChallenge } = require('../src/agents/contracts');
 const { ExecutionGuard } = require('../src/services/executionGuard');
+const { validateDeal } = require('../src/security/validateDeal');
+const { JsonRepository } = require('../src/repositories/jsonRepository');
 
 const base = { asOf:'2026-09-16', cashInBank:1000, receipts:[], committedPayments:[], forecastPayments:[], productionRequirements:[] };
 const r=(id,amount,dueDate,status='OPEN')=>({id,amount,dueDate,status});
-const p=(id,amount)=>({id,amount});
+const p=(id,amount,status)=>({id,amount,...(status ? {status} : {})});
 
 test('normal liquidity emits no signal',()=>assert.equal(detectCashFlowDanger({...base,committedPayments:[p('p1',500)]}).signal,null));
 test('short-term committed deficit emits signal',()=>assert.equal(detectCashFlowDanger({...base,committedPayments:[p('p1',1500)]}).signal.exposure,500));
 test('large future receivable is not available cash or overdue',()=>{const x=detectCashFlowDanger({...base,receipts:[r('r1',10000,'2026-09-30')],committedPayments:[p('p1',1500)]}); assert.equal(x.metrics.receiptsOverdue,0); assert.equal(x.metrics.availableLiquidity,1000); assert.equal(x.signal.exposure,500);});
 test('genuinely overdue receivable is classified but not treated as cash',()=>{const x=detectCashFlowDanger({...base,receipts:[r('r1',800,'2026-09-01')]}); assert.equal(x.metrics.receiptsOverdue,800); assert.equal(x.metrics.availableLiquidity,1000);});
 test('receipt due today can contribute to available liquidity',()=>assert.equal(detectCashFlowDanger({...base,receipts:[r('r1',300,'2026-09-16')]}).metrics.availableLiquidity,1300));
-test('production requirement is committed requirement',()=>assert.equal(detectCashFlowDanger({...base,productionRequirements:[p('prod1',1400)]}).signal.exposure,400));
+test('committed production requirement affects liquidity',()=>assert.equal(detectCashFlowDanger({...base,productionRequirements:[p('prod1',1400,'COMMITTED')]}).signal.exposure,400));
+test('forecast production requirement does not become committed',()=>assert.equal(detectCashFlowDanger({...base,productionRequirements:[p('prod1',1400,'FORECAST')]}).signal,null));
+test('unknown production commitment remains unknown and does not become committed',()=>{const x=detectCashFlowDanger({...base,productionRequirements:[p('prod1',1400)]}); assert.equal(x.signal,null); assert.equal(x.metrics.unknownProductionRequirements,1400);});
 test('forecast payment does not become committed payment',()=>assert.equal(detectCashFlowDanger({...base,forecastPayments:[p('f1',5000)]}).signal,null));
 test('missing receipt date remains unknown',()=>assert.equal(detectCashFlowDanger({...base,receipts:[r('r1',700,null)]}).metrics.receiptsUnknownDate,700));
 test('duplicate liability id is counted once',()=>assert.equal(detectCashFlowDanger({...base,committedPayments:[p('p1',700),p('p1',700)]}).metrics.committedPayments,700));
@@ -28,3 +35,6 @@ test('RALPH output type is constrained',()=>assert.throws(()=>validateRalphOutpu
 test('Sherlock supports insufficient evidence',()=>assert.equal(validateSherlockFinding({status:'INSUFFICIENT EVIDENCE'}).status,'INSUFFICIENT EVIDENCE'));
 test('RAT challenge requires falsification evidence field',()=>assert.throws(()=>validateRatChallenge({challenges:[]})));
 test('idempotency prevents duplicate execution',()=>{const g=new ExecutionGuard(); const a={id:'a1',idempotencyKey:'k1',permissionLevel:3,actionType:'LOW_RISK',approvalStatus:'APPROVED',approver:'human',approvalTimestamp:'2026-09-16T12:00:00Z'}; let calls=0; g.execute(a,()=>++calls); const second=g.execute(a,()=>++calls); assert.equal(calls,1); assert.equal(second.duplicatePrevented,true);});
+test('deal validation rejects malformed numeric value',()=>assert.throws(()=>validateDeal({company:'A',title:'B',value:'12x'})));
+test('deal validation rejects silent truncation',()=>assert.throws(()=>validateDeal({company:'A'.repeat(201),title:'B'})));
+test('corrupt JSON is not silently converted to empty data',()=>{const dir=fs.mkdtempSync(path.join(os.tmpdir(),'ralph-')); fs.writeFileSync(path.join(dir,'x.json'),'{bad'); const repo=new JsonRepository({dataDir:dir,fileName:'x.json'}); assert.throws(()=>repo.list(),/Invalid JSON/); fs.rmSync(dir,{recursive:true,force:true});});
