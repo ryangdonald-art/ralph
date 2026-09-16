@@ -1,0 +1,30 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { detectCashFlowDanger } = require('../src/detectors/cashFlowDanger');
+const { economicImpact, canExecute, PERMISSION_LEVELS, validateRalphOutput } = require('../src/domain/contracts');
+const { validateSherlockFinding, validateRatChallenge } = require('../src/agents/contracts');
+const { ExecutionGuard } = require('../src/services/executionGuard');
+
+const base = { asOf:'2026-09-16', cashInBank:1000, receipts:[], committedPayments:[], forecastPayments:[], productionRequirements:[] };
+const r=(id,amount,dueDate,status='OPEN')=>({id,amount,dueDate,status});
+const p=(id,amount)=>({id,amount});
+
+test('normal liquidity emits no signal',()=>assert.equal(detectCashFlowDanger({...base,committedPayments:[p('p1',500)]}).signal,null));
+test('short-term committed deficit emits signal',()=>assert.equal(detectCashFlowDanger({...base,committedPayments:[p('p1',1500)]}).signal.exposure,500));
+test('large future receivable is not available cash or overdue',()=>{const x=detectCashFlowDanger({...base,receipts:[r('r1',10000,'2026-09-30')],committedPayments:[p('p1',1500)]}); assert.equal(x.metrics.receiptsOverdue,0); assert.equal(x.metrics.availableLiquidity,1000); assert.equal(x.signal.exposure,500);});
+test('genuinely overdue receivable is classified but not treated as cash',()=>{const x=detectCashFlowDanger({...base,receipts:[r('r1',800,'2026-09-01')]}); assert.equal(x.metrics.receiptsOverdue,800); assert.equal(x.metrics.availableLiquidity,1000);});
+test('receipt due today can contribute to available liquidity',()=>assert.equal(detectCashFlowDanger({...base,receipts:[r('r1',300,'2026-09-16')]}).metrics.availableLiquidity,1300));
+test('production requirement is committed requirement',()=>assert.equal(detectCashFlowDanger({...base,productionRequirements:[p('prod1',1400)]}).signal.exposure,400));
+test('forecast payment does not become committed payment',()=>assert.equal(detectCashFlowDanger({...base,forecastPayments:[p('f1',5000)]}).signal,null));
+test('missing receipt date remains unknown',()=>assert.equal(detectCashFlowDanger({...base,receipts:[r('r1',700,null)]}).metrics.receiptsUnknownDate,700));
+test('duplicate liability id is counted once',()=>assert.equal(detectCashFlowDanger({...base,committedPayments:[p('p1',700),p('p1',700)]}).metrics.committedPayments,700));
+test('revenue/profit fields cannot inflate liquidity',()=>assert.equal(detectCashFlowDanger({...base,revenue:100000,profit:50000,committedPayments:[p('p1',2000)]}).signal.exposure,1000));
+test('materiality threshold suppresses immaterial gap',()=>assert.equal(detectCashFlowDanger({...base,committedPayments:[p('p1',1050)]},{materialityThreshold:100}).signal,null));
+test('economic impact state is explicit',()=>assert.deepEqual(economicImpact({amount:100}),{amount:100,currency:'ZAR',state:'ESTIMATED'}));
+test('invalid economic state is rejected',()=>assert.throws(()=>economicImpact({amount:1,state:'REALISH'})));
+test('Level 4 execution is blocked in V1',()=>assert.equal(canExecute({permissionLevel:PERMISSION_LEVELS.AUTONOMOUS,approved:true,actionType:'LOW_RISK'}),false));
+test('Level 3 requires approval',()=>assert.equal(canExecute({permissionLevel:PERMISSION_LEVELS.EXECUTE_WITH_APPROVAL,approved:false,actionType:'LOW_RISK'}),false));
+test('RALPH output type is constrained',()=>assert.throws(()=>validateRalphOutput({type:'SUGGESTION',summary:'x'})));
+test('Sherlock supports insufficient evidence',()=>assert.equal(validateSherlockFinding({status:'INSUFFICIENT EVIDENCE'}).status,'INSUFFICIENT EVIDENCE'));
+test('RAT challenge requires falsification evidence field',()=>assert.throws(()=>validateRatChallenge({challenges:[]})));
+test('idempotency prevents duplicate execution',()=>{const g=new ExecutionGuard(); const a={id:'a1',idempotencyKey:'k1',permissionLevel:3,actionType:'LOW_RISK',approvalStatus:'APPROVED',approver:'human',approvalTimestamp:'2026-09-16T12:00:00Z'}; let calls=0; g.execute(a,()=>++calls); const second=g.execute(a,()=>++calls); assert.equal(calls,1); assert.equal(second.duplicatePrevented,true);});
