@@ -5,9 +5,16 @@ function authConfigured() {
   return Boolean(config.supabaseUrl && config.supabasePublishableKey);
 }
 
+function looksLikeJwt(accessToken) {
+  if (typeof accessToken !== 'string') return false;
+  const parts = accessToken.split('.');
+  return parts.length === 3 && parts.every(part => /^[A-Za-z0-9_-]+$/.test(part));
+}
+
 async function verifyAccessToken(accessToken) {
-  if (!authConfigured()) throw new AppError('AUTH_NOT_CONFIGURED', 'authentication is not configured', 503);
-  if (!accessToken) throw new AppError('AUTH_REQUIRED', 'authentication required', 401);
+  if (!authConfigured()) throw new AppError('AUTH_NOT_CONFIGURED', 'authentication is not configured');
+  if (!accessToken) throw new AppError('AUTH_REQUIRED', 'authentication required');
+  if (!looksLikeJwt(accessToken)) throw new AppError('AUTH_INVALID', 'invalid authentication token format');
 
   let response;
   try {
@@ -20,12 +27,12 @@ async function verifyAccessToken(accessToken) {
       signal: AbortSignal.timeout(5000)
     });
   } catch (_error) {
-    throw new AppError('AUTH_UNAVAILABLE', 'authentication service unavailable', 503);
+    throw new AppError('AUTH_UNAVAILABLE', 'authentication service unavailable');
   }
 
-  if (!response.ok) throw new AppError('AUTH_INVALID', 'invalid or expired authentication', 401);
+  if (!response.ok) throw new AppError('AUTH_INVALID', 'invalid or expired authentication');
   const user = await response.json();
-  if (!user || !user.id) throw new AppError('AUTH_INVALID', 'invalid authentication identity', 401);
+  if (!user || !user.id) throw new AppError('AUTH_INVALID', 'invalid authentication identity');
   return Object.freeze({ id: user.id, email: user.email || null });
 }
 
@@ -44,4 +51,4 @@ async function requireAuth(req, _res, next) {
   }
 }
 
-module.exports = { authConfigured, verifyAccessToken, requireAuth };
+module.exports = { authConfigured, looksLikeJwt, verifyAccessToken, requireAuth };
