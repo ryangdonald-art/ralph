@@ -10,7 +10,7 @@
     "test": "node --test",
     "check": "node --check src/server.js && node --check src/config.js && node --check src/domain/contracts.js && node --check src/domain/errors.js && node --check src/detectors/cashFlowDanger.js && node --check src/agents/contracts.js && node --check src/repositories/jsonRepository.js && node --check src/security/validateDeal.js && node --check src/security/requireAuth.js && node --check src/services/executionGuard.js && node --check src/services/resourceServices.js && node --check src/telemetry/logger.js && node --check public/app.js && node --check test/foundation.test.js"
   },
-  "engines": { "node": ">=20" },
+  "engines": { "node": "20.x" },
   "dependencies": { "express": "^4.21.2" },
   "devDependencies": { "nodemon": "^3.1.10" }
 }
