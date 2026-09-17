@@ -3,47 +3,77 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0f1115" />
+  <meta name="theme-color" content="#06344B" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="RALPH" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="robots" content="noindex,nofollow" />
   <title>RALPH</title>
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <main class="auth-stage" aria-live="polite">
-    <section class="auth-panel">
-      <div class="brand">RALPH</div>
+  <main class="app-stage" aria-live="polite">
+    <section class="phone-shell">
+      <header class="app-header">
+        <div>
+          <div class="brand">RALPH</div>
+          <div class="brand-subtitle">RYAN'S AUTONOMOUS LOGIC &amp; PROFIT HEURISTIC</div>
+        </div>
+        <button id="signOutBtn" class="text-btn hidden" type="button">Sign out</button>
+      </header>
 
-      <div id="bootState" class="state-block">
-        <p class="muted">Secure access</p>
-        <div class="status">Checking identity…</div>
+      <div id="bootState" class="state-card">
+        <div class="eyebrow">SECURE ACCESS</div>
+        <h1>Checking identity…</h1>
       </div>
 
-      <form id="loginForm" class="auth-form hidden" autocomplete="on">
-        <p class="muted">Secure access</p>
+      <form id="loginForm" class="login-card hidden" autocomplete="on">
+        <div class="eyebrow">AUTHORISED USERS ONLY</div>
+        <h1>Secure access.</h1>
+        <p class="lede">RALPH opens only after your identity and Dealworx authority are verified.</p>
         <label for="email">Email</label>
-        <input id="email" name="email" type="email" inputmode="email" autocomplete="email" required />
-        <button id="signInBtn" class="primary-btn" type="submit">Sign in</button>
+        <input id="email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="1@dealworx.co.za" required />
+        <button id="signInBtn" class="primary-btn" type="submit">Send secure login link</button>
         <p id="loginMessage" class="message" role="status"></p>
+        <p class="legal-note">Copyright © 2026 Ryan Graham Donald. All rights reserved.</p>
       </form>
 
       <section id="authenticatedShell" class="hidden">
-        <div class="authenticated-row">
+        <div class="attention-head">
           <div>
-            <div class="status-good">Authenticated</div>
-            <p id="identityLabel" class="muted identity"></p>
+            <div class="eyebrow">WHAT NEEDS MY ATTENTION?</div>
+            <h1>Nothing needs your attention.</h1>
+            <p class="lede">The secure boundary is open. Material issues will appear here only when supported by evidence.</p>
           </div>
-          <button id="signOutBtn" class="ghost-btn" type="button">Sign out</button>
+          <div class="identity-pill">
+            <span class="status-dot"></span>
+            <span id="identityLabel"></span>
+          </div>
         </div>
-        <div class="today-placeholder">
-          <div class="eyebrow">TODAY</div>
-          <h1>Identity established.</h1>
-          <p>Business authority remains closed until Phase B.</p>
+
+        <div class="empty-state">
+          <div class="empty-mark">✓</div>
+          <div>
+            <strong>NO MATERIAL SIGNALS</strong>
+            <p>RALPH will not manufacture an issue to fill the screen.</p>
+          </div>
+        </div>
+
+        <div class="boundary-card">
+          <div class="boundary-row"><span>Identity</span><strong>Verified</strong></div>
+          <div class="boundary-row"><span>Business authority</span><strong>Server verified</strong></div>
+          <div class="boundary-row"><span>Decision autonomy</span><strong>Level ≤ 3</strong></div>
         </div>
       </section>
 
-      <section id="fatalState" class="hidden">
-        <p class="status-error">RALPH authentication is unavailable.</p>
-        <p class="muted">No business data has been opened.</p>
+      <section id="fatalState" class="state-card hidden">
+        <div class="eyebrow danger-text">ACCESS CLOSED</div>
+        <h1>RALPH authentication is unavailable.</h1>
+        <p class="lede">No business data has been opened.</p>
       </section>
     </section>
   </main>
