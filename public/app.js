@@ -1,116 +1,109 @@
-async function getJson(url, options) {
-  const res = await fetch(url, options);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || `Request failed: ${res.status}`);
-  return data;
-}
+(() => {
+  'use strict';
 
-function formatCurrency(value) {
-  return new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', maximumFractionDigits: 0 }).format(value || 0);
-}
+  const bootState = document.getElementById('bootState');
+  const loginForm = document.getElementById('loginForm');
+  const loginMessage = document.getElementById('loginMessage');
+  const signInBtn = document.getElementById('signInBtn');
+  const signOutBtn = document.getElementById('signOutBtn');
+  const authenticatedShell = document.getElementById('authenticatedShell');
+  const identityLabel = document.getElementById('identityLabel');
+  const fatalState = document.getElementById('fatalState');
 
-function textElement(tag, className, text) {
-  const el = document.createElement(tag);
-  if (className) el.className = className;
-  el.textContent = text == null ? '' : String(text);
-  return el;
-}
+  let client;
 
-function itemContainer() {
-  const el = document.createElement('div');
-  el.className = 'item';
-  return el;
-}
-
-function replaceChildren(container, children) {
-  container.replaceChildren(...children);
-}
-
-function renderDeals(deals) {
-  const items = deals.map((d) => {
-    const item = itemContainer();
-    item.append(
-      textElement('h3', '', `${d.company} — ${d.title}`),
-      textElement('div', 'meta', `Stage: ${d.stage}`),
-      textElement('div', 'meta', `Value: ${formatCurrency(d.value)}`),
-      textElement('div', 'meta', `Next action: ${d.nextAction}`)
-    );
-    if (d.notes) item.append(textElement('p', '', d.notes));
-    return item;
-  });
-  replaceChildren(document.getElementById('deals'), items);
-}
-
-function renderSignals(signals) {
-  const items = signals.map((s) => {
-    const item = itemContainer();
-    item.append(
-      textElement('h3', '', s.company),
-      textElement('div', 'meta', s.signal),
-      textElement('div', 'meta', `Confidence: ${s.confidence}%`)
-    );
-    return item;
-  });
-  replaceChildren(document.getElementById('signals'), items);
-}
-
-function renderPosts(posts) {
-  const items = posts.map((p) => {
-    const item = itemContainer();
-    item.append(
-      textElement('h3', '', p.title),
-      textElement('p', '', p.content)
-    );
-    return item;
-  });
-  replaceChildren(document.getElementById('posts'), items);
-}
-
-function showLoadError(error) {
-  console.error('RALPH load error', error);
-  const priorities = document.querySelector('.priority-list');
-  if (priorities) {
-    priorities.replaceChildren(textElement('li', '', 'RALPH could not load current data. Check system health.'));
+  function showOnly(element) {
+    [bootState, loginForm, authenticatedShell, fatalState].forEach((item) => item.classList.toggle('hidden', item !== element));
   }
-}
 
-async function load() {
-  try {
-    const [deals, signals, posts] = await Promise.all([
-      getJson('/api/deals'),
-      getJson('/api/signals'),
-      getJson('/api/posts')
-    ]);
-    renderDeals(deals);
-    renderSignals(signals);
-    renderPosts(posts);
-  } catch (error) {
-    showLoadError(error);
+  function safeMessage(message) {
+    loginMessage.textContent = message || '';
   }
-}
 
-const modal = document.getElementById('dealModal');
-document.getElementById('openFormBtn').addEventListener('click', () => modal.classList.remove('hidden'));
-document.getElementById('closeFormBtn').addEventListener('click', () => modal.classList.add('hidden'));
+  async function getConfig() {
+    const response = await fetch('/api/auth/config', { headers: { Accept: 'application/json' }, cache: 'no-store' });
+    if (!response.ok) throw new Error('AUTH_CONFIG_UNAVAILABLE');
+    const data = await response.json();
+    if (!data.supabaseUrl || !data.supabasePublishableKey) throw new Error('AUTH_CONFIG_INVALID');
+    return data;
+  }
 
-document.getElementById('dealForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const form = new FormData(e.target);
-  const body = Object.fromEntries(form.entries());
-
-  try {
-    await getJson('/api/deals', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+  async function verifyWithServer(session) {
+    if (!session || !session.access_token) return null;
+    const response = await fetch('/api/auth/me', {
+      headers: { Authorization: `Bearer ${session.access_token}`, Accept: 'application/json' },
+      cache: 'no-store'
     });
-    e.target.reset();
-    modal.classList.add('hidden');
-    await load();
-  } catch (error) {
-    console.error('RALPH deal save error', error);
-    window.alert(error.message || 'Unable to save deal');
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data && data.authenticated ? data.user : null;
   }
-});
 
-load();
+  async function renderSession(session) {
+    const identity = await verifyWithServer(session);
+    if (!identity) {
+      showOnly(loginForm);
+      identityLabel.textContent = '';
+      return;
+    }
+    identityLabel.textContent = identity.email || identity.id;
+    showOnly(authenticatedShell);
+  }
+
+  async function boot() {
+    try {
+      if (!window.supabase || typeof window.supabase.createClient !== 'function') throw new Error('AUTH_LIBRARY_UNAVAILABLE');
+      const config = await getConfig();
+      client = window.supabase.createClient(config.supabaseUrl, config.supabasePublishableKey, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+      });
+
+      const { data, error } = await client.auth.getSession();
+      if (error) throw error;
+      await renderSession(data.session);
+
+      client.auth.onAuthStateChange((_event, session) => {
+        window.setTimeout(() => renderSession(session).catch(() => showOnly(loginForm)), 0);
+      });
+    } catch (_error) {
+      showOnly(fatalState);
+    }
+  }
+
+  loginForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!client) return;
+    signInBtn.disabled = true;
+    safeMessage('');
+    const email = new FormData(loginForm).get('email');
+    try {
+      const { error } = await client.auth.signInWithOtp({
+        email: String(email || '').trim(),
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: window.location.origin
+        }
+      });
+      if (error) throw error;
+      safeMessage('Check your email for the secure sign-in link.');
+    } catch (_error) {
+      safeMessage('Sign-in could not be completed. Access has not been opened.');
+    } finally {
+      signInBtn.disabled = false;
+    }
+  });
+
+  signOutBtn.addEventListener('click', async () => {
+    if (!client) return;
+    signOutBtn.disabled = true;
+    try {
+      await client.auth.signOut();
+    } finally {
+      identityLabel.textContent = '';
+      showOnly(loginForm);
+      signOutBtn.disabled = false;
+    }
+  });
+
+  boot();
+})();
