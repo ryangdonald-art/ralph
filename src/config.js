@@ -8,9 +8,17 @@ function intEnv(name, fallback) {
   return value;
 }
 
+function urlEnv(name) {
+  const raw = process.env[name] || '';
+  if (!raw) return '';
+  const value = new URL(raw);
+  if (value.protocol !== 'https:' && process.env.NODE_ENV === 'production') throw new Error(`${name} must use https in production`);
+  return value.origin;
+}
+
 const storageProvider = (process.env.STORAGE_PROVIDER || 'json').toLowerCase();
 if (storageProvider !== 'json') {
-  throw new Error(`Unsupported STORAGE_PROVIDER: ${storageProvider}. Supabase is not configured.`);
+  throw new Error(`Unsupported STORAGE_PROVIDER: ${storageProvider}. Supabase persistence is not configured.`);
 }
 
 module.exports = Object.freeze({
@@ -19,5 +27,7 @@ module.exports = Object.freeze({
   logLevel: process.env.LOG_LEVEL || 'info',
   dataDir: path.resolve(process.env.DATA_DIRECTORY || path.join(__dirname, '..', 'data')),
   storageProvider,
-  requestBodyLimit: process.env.REQUEST_BODY_LIMIT || '64kb'
+  requestBodyLimit: process.env.REQUEST_BODY_LIMIT || '64kb',
+  supabaseUrl: urlEnv('SUPABASE_URL'),
+  supabasePublishableKey: process.env.SUPABASE_PUBLISHABLE_KEY || ''
 });
