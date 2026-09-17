@@ -33,7 +33,11 @@ async function requireAuth(req, _res, next) {
   try {
     const header = req.get('authorization') || '';
     const match = /^Bearer\s+(.+)$/i.exec(header);
-    req.identity = await verifyAccessToken(match ? match[1] : '');
+    const accessToken = match ? match[1] : '';
+    req.identity = await verifyAccessToken(accessToken);
+    // Retained only in request memory so the server can perform an RLS-protected membership lookup.
+    // Never log or persist this value.
+    req.accessToken = accessToken;
     next();
   } catch (error) {
     next(error);
