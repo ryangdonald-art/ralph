@@ -2,74 +2,53 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RALPH MVP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1115" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>RALPH</title>
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <div class="app">
-    <header class="topbar">
-      <div>
-        <div class="eyebrow">RALPH</div>
-        <h1>Today Mode</h1>
+  <main class="auth-stage" aria-live="polite">
+    <section class="auth-panel">
+      <div class="brand">RALPH</div>
+
+      <div id="bootState" class="state-block">
+        <p class="muted">Secure access</p>
+        <div class="status">Checking identity…</div>
       </div>
-      <button class="primary-btn" id="openFormBtn">+ New Deal</button>
-    </header>
 
-    <main class="grid">
-      <section class="card">
-        <h2>What RALPH does</h2>
-        <p>Finds opportunities, tracks deals, starts conversations, and helps turn them into revenue.</p>
-      </section>
+      <form id="loginForm" class="auth-form hidden" autocomplete="on">
+        <p class="muted">Secure access</p>
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" inputmode="email" autocomplete="email" required />
+        <button id="signInBtn" class="primary-btn" type="submit">Sign in</button>
+        <p id="loginMessage" class="message" role="status"></p>
+      </form>
 
-      <section class="card">
-        <h2>Today’s Priorities</h2>
-        <ul class="priority-list">
-          <li>Review hot deals</li>
-          <li>Start outreach on new opportunities</li>
-          <li>Check market signals</li>
-        </ul>
-      </section>
-
-      <section class="card card-wide">
-        <div class="section-head">
-          <h2>Deals</h2>
-          <span class="muted">MVP demo data</span>
+      <section id="authenticatedShell" class="hidden">
+        <div class="authenticated-row">
+          <div>
+            <div class="status-good">Authenticated</div>
+            <p id="identityLabel" class="muted identity"></p>
+          </div>
+          <button id="signOutBtn" class="ghost-btn" type="button">Sign out</button>
         </div>
-        <div id="deals" class="stack"></div>
-      </section>
-
-      <section class="card">
-        <h2>Intelligence</h2>
-        <div id="signals" class="stack"></div>
-      </section>
-
-      <section class="card">
-        <h2>Posts</h2>
-        <div id="posts" class="stack"></div>
-      </section>
-    </main>
-
-    <div class="modal hidden" id="dealModal">
-      <div class="modal-panel">
-        <div class="section-head">
-          <h2>New Deal</h2>
-          <button class="ghost-btn" id="closeFormBtn">Close</button>
+        <div class="today-placeholder">
+          <div class="eyebrow">TODAY</div>
+          <h1>Identity established.</h1>
+          <p>Business authority remains closed until Phase B.</p>
         </div>
+      </section>
 
-        <form id="dealForm" class="form">
-          <input name="company" placeholder="Company" required />
-          <input name="title" placeholder="Opportunity title" required />
-          <input name="stage" placeholder="Stage" value="New" />
-          <input name="value" placeholder="Estimated value" type="number" />
-          <input name="nextAction" placeholder="Next action" value="Review" />
-          <textarea name="notes" placeholder="Notes"></textarea>
-          <button class="primary-btn" type="submit">Save deal</button>
-        </form>
-      </div>
-    </div>
-  </div>
+      <section id="fatalState" class="hidden">
+        <p class="status-error">RALPH authentication is unavailable.</p>
+        <p class="muted">No business data has been opened.</p>
+      </section>
+    </section>
+  </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
   <script src="/app.js"></script>
 </body>
 </html>
