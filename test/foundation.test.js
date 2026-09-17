@@ -9,6 +9,7 @@ const { validateSherlockFinding, validateRatChallenge } = require('../src/agents
 const { ExecutionGuard } = require('../src/services/executionGuard');
 const { validateDeal } = require('../src/security/validateDeal');
 const { JsonRepository } = require('../src/repositories/jsonRepository');
+const { AppError } = require('../src/domain/errors');
 
 const base = { asOf:'2026-09-16', cashInBank:1000, receipts:[], committedPayments:[], forecastPayments:[], productionRequirements:[] };
 const r=(id,amount,dueDate,status='OPEN')=>({id,amount,dueDate,status});
@@ -38,3 +39,7 @@ test('idempotency prevents duplicate execution',()=>{const g=new ExecutionGuard(
 test('deal validation rejects malformed numeric value',()=>assert.throws(()=>validateDeal({company:'A',title:'B',value:'12x'})));
 test('deal validation rejects silent truncation',()=>assert.throws(()=>validateDeal({company:'A'.repeat(201),title:'B'})));
 test('corrupt JSON is not silently converted to empty data',()=>{const dir=fs.mkdtempSync(path.join(os.tmpdir(),'ralph-')); fs.writeFileSync(path.join(dir,'x.json'),'{bad'); const repo=new JsonRepository({dataDir:dir,fileName:'x.json'}); assert.throws(()=>repo.list(),/Invalid JSON/); fs.rmSync(dir,{recursive:true,force:true});});
+test('missing identity maps to 401 rather than internal error',()=>assert.equal(new AppError('AUTH_REQUIRED','authentication required').status,401));
+test('invalid identity maps to 401 rather than internal error',()=>assert.equal(new AppError('AUTH_INVALID','invalid authentication').status,401));
+test('auth outage fails closed',()=>assert.equal(new AppError('AUTH_UNAVAILABLE','authentication unavailable').status,503));
+test('browser source contains no server/service-role credential name',()=>{const source=fs.readFileSync(path.join(__dirname,'..','public','app.js'),'utf8'); assert.equal(/service[_-]?role|server[_-]?key|sb_secret_/i.test(source),false);});
