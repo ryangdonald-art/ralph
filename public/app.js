@@ -14,11 +14,10 @@
 
   function showOnly(element) {
     [bootState, loginForm, authenticatedShell, fatalState].forEach((item) => item.classList.toggle('hidden', item !== element));
+    signOutBtn.classList.toggle('hidden', element !== authenticatedShell);
   }
 
-  function safeMessage(message) {
-    loginMessage.textContent = message || '';
-  }
+  function safeMessage(message) { loginMessage.textContent = message || ''; }
 
   async function getConfig() {
     const response = await fetch('/api/auth/config', { headers: { Accept: 'application/json' }, cache: 'no-store' });
@@ -42,26 +41,25 @@
   async function renderSession(session) {
     const identity = await verifyWithServer(session);
     if (!identity) {
-      showOnly(loginForm);
       identityLabel.textContent = '';
+      showOnly(loginForm);
       return;
     }
-    identityLabel.textContent = identity.email || identity.id;
+    identityLabel.textContent = identity.email || 'Verified user';
     showOnly(authenticatedShell);
   }
 
   async function boot() {
     try {
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
       if (!window.supabase || typeof window.supabase.createClient !== 'function') throw new Error('AUTH_LIBRARY_UNAVAILABLE');
       const config = await getConfig();
       client = window.supabase.createClient(config.supabaseUrl, config.supabasePublishableKey, {
         auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
       });
-
       const { data, error } = await client.auth.getSession();
       if (error) throw error;
       await renderSession(data.session);
-
       client.auth.onAuthStateChange((_event, session) => {
         window.setTimeout(() => renderSession(session).catch(() => showOnly(loginForm)), 0);
       });
@@ -74,20 +72,17 @@
     event.preventDefault();
     if (!client) return;
     signInBtn.disabled = true;
-    safeMessage('');
+    safeMessage('Sending secure link…');
     const email = new FormData(loginForm).get('email');
     try {
       const { error } = await client.auth.signInWithOtp({
         email: String(email || '').trim(),
-        options: {
-          shouldCreateUser: false,
-          emailRedirectTo: window.location.origin
-        }
+        options: { shouldCreateUser: false, emailRedirectTo: window.location.origin }
       });
       if (error) throw error;
-      safeMessage('Check your email for the secure sign-in link.');
+      safeMessage('Secure link sent. Open it on this iPhone to continue.');
     } catch (_error) {
-      safeMessage('Sign-in could not be completed. Access has not been opened.');
+      safeMessage('Sign-in could not be completed. Access remains closed.');
     } finally {
       signInBtn.disabled = false;
     }
@@ -96,9 +91,8 @@
   signOutBtn.addEventListener('click', async () => {
     if (!client) return;
     signOutBtn.disabled = true;
-    try {
-      await client.auth.signOut();
-    } finally {
+    try { await client.auth.signOut(); }
+    finally {
       identityLabel.textContent = '';
       showOnly(loginForm);
       signOutBtn.disabled = false;
