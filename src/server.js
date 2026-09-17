@@ -6,8 +6,12 @@ const logger = require('./telemetry/logger');
 const { AppError } = require('./domain/errors');
 const { validateDeal } = require('./security/validateDeal');
 const { requireAuth, authConfigured } = require('./security/requireAuth');
+const { requireAuthorization } = require('./security/requireAuthorization');
 const { legacyRepositories } = require('./repositories/jsonRepository');
 const { createServices } = require('./services/resourceServices');
+
+const anyMember = requireAuthorization(['ADMIN', 'OPERATOR', 'VIEWER']);
+const canOperate = requireAuthorization(['ADMIN', 'OPERATOR']);
 
 function createApp({ services = createServices(legacyRepositories(config.dataDir)) } = {}) {
   const app = express();
@@ -25,24 +29,23 @@ function createApp({ services = createServices(legacyRepositories(config.dataDir
 
   app.get('/api/health', (req, res) => res.json({ ok: true, app: 'RALPH', status: 'live', authConfigured: authConfigured(), requestId: req.requestId }));
 
-  // Public configuration contains only values designed for browser use.
   app.get('/api/auth/config', (req, res) => {
     if (!authConfigured()) throw new AppError('AUTH_NOT_CONFIGURED', 'authentication is not configured');
     res.json({ supabaseUrl: config.supabaseUrl, supabasePublishableKey: config.supabasePublishableKey, requestId: req.requestId });
   });
 
-  app.get('/api/auth/me', requireAuth, (req, res) => res.json({ authenticated: true, user: req.identity, requestId: req.requestId }));
+  app.get('/api/auth/me', requireAuth, anyMember, (req, res) => res.json({ authenticated: true, user: req.identity, membership: req.membership, requestId: req.requestId }));
 
-  // Phase A: identity is required for every legacy business-data route. Phase B will add authorization.
-  app.get('/api/deals', requireAuth, (_req, res, next) => { try { res.json(services.deals.list()); } catch (e) { next(e); } });
-  app.post('/api/deals', requireAuth, (req, res, next) => {
+  // Legacy JSON routes remain temporary, but are no longer reachable by authentication alone.
+  app.get('/api/deals', requireAuth, anyMember, (_req, res, next) => { try { res.json(services.deals.list()); } catch (e) { next(e); } });
+  app.post('/api/deals', requireAuth, canOperate, (req, res, next) => {
     try {
       const deal = services.deals.create(validateDeal(req.body));
       res.status(201).json(deal);
     } catch (e) { next(e); }
   });
-  app.get('/api/signals', requireAuth, (_req, res, next) => { try { res.json(services.signals.list()); } catch (e) { next(e); } });
-  app.get('/api/posts', requireAuth, (_req, res, next) => { try { res.json(services.posts.list()); } catch (e) { next(e); } });
+  app.get('/api/signals', requireAuth, anyMember, (_req, res, next) => { try { res.json(services.signals.list()); } catch (e) { next(e); } });
+  app.get('/api/posts', requireAuth, anyMember, (_req, res, next) => { try { res.json(services.posts.list()); } catch (e) { next(e); } });
 
   app.get('*', (_req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'index.html')));
 
