@@ -1,6 +1,6 @@
 {
   "name": "ralph-dev-ready",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "RALPH 2.0 foundation - controlled migration from MVP",
   "main": "src/server.js",
@@ -8,7 +8,7 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "test": "node --test",
-    "check": "node --check src/server.js && node --check src/config.js && node --check src/domain/contracts.js && node --check src/domain/errors.js && node --check src/detectors/cashFlowDanger.js && node --check src/agents/contracts.js && node --check src/repositories/jsonRepository.js && node --check src/security/validateDeal.js && node --check src/services/executionGuard.js && node --check src/services/resourceServices.js && node --check src/telemetry/logger.js && node --check test/foundation.test.js"
+    "check": "node --check src/server.js && node --check src/config.js && node --check src/domain/contracts.js && node --check src/domain/errors.js && node --check src/detectors/cashFlowDanger.js && node --check src/agents/contracts.js && node --check src/repositories/jsonRepository.js && node --check src/security/validateDeal.js && node --check src/security/requireAuth.js && node --check src/services/executionGuard.js && node --check src/services/resourceServices.js && node --check src/telemetry/logger.js && node --check public/app.js && node --check test/foundation.test.js"
   },
   "engines": { "node": ">=20" },
   "dependencies": { "express": "^4.21.2" },
