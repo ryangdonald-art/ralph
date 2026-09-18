@@ -2,74 +2,83 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RALPH MVP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#06344B" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="RALPH" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>RALPH</title>
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <div class="app">
-    <header class="topbar">
-      <div>
-        <div class="eyebrow">RALPH</div>
-        <h1>Today Mode</h1>
-      </div>
-      <button class="primary-btn" id="openFormBtn">+ New Deal</button>
-    </header>
-
-    <main class="grid">
-      <section class="card">
-        <h2>What RALPH does</h2>
-        <p>Finds opportunities, tracks deals, starts conversations, and helps turn them into revenue.</p>
-      </section>
-
-      <section class="card">
-        <h2>Today’s Priorities</h2>
-        <ul class="priority-list">
-          <li>Review hot deals</li>
-          <li>Start outreach on new opportunities</li>
-          <li>Check market signals</li>
-        </ul>
-      </section>
-
-      <section class="card card-wide">
-        <div class="section-head">
-          <h2>Deals</h2>
-          <span class="muted">MVP demo data</span>
+  <main class="app-stage" aria-live="polite">
+    <section class="phone-shell">
+      <header class="app-header">
+        <div>
+          <div class="brand">RALPH</div>
+          <div class="brand-subtitle">RYAN'S AUTONOMOUS LOGIC &amp; PROFIT HEURISTIC</div>
         </div>
-        <div id="deals" class="stack"></div>
-      </section>
+        <button id="signOutBtn" class="text-btn hidden" type="button">Sign out</button>
+      </header>
 
-      <section class="card">
-        <h2>Intelligence</h2>
-        <div id="signals" class="stack"></div>
-      </section>
+      <div id="bootState" class="state-card">
+        <div class="eyebrow">SECURE ACCESS</div>
+        <h1>Checking identity…</h1>
+      </div>
 
-      <section class="card">
-        <h2>Posts</h2>
-        <div id="posts" class="stack"></div>
-      </section>
-    </main>
+      <form id="loginForm" class="login-card hidden" autocomplete="on">
+        <div class="eyebrow">AUTHORISED USERS ONLY</div>
+        <h1>Secure access.</h1>
+        <p class="lede">RALPH opens only after your identity and Dealworx authority are verified.</p>
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="1@dealworx.co.za" required />
+        <button id="signInBtn" class="primary-btn" type="submit">Send secure login link</button>
+        <p id="loginMessage" class="message" role="status"></p>
+        <p class="legal-note">Copyright © 2026 Ryan Graham Donald. All rights reserved.</p>
+      </form>
 
-    <div class="modal hidden" id="dealModal">
-      <div class="modal-panel">
-        <div class="section-head">
-          <h2>New Deal</h2>
-          <button class="ghost-btn" id="closeFormBtn">Close</button>
+      <section id="authenticatedShell" class="hidden">
+        <div class="attention-head">
+          <div>
+            <div class="eyebrow">WHAT NEEDS MY ATTENTION?</div>
+            <h1>Nothing needs your attention.</h1>
+            <p class="lede">The secure boundary is open. Material issues will appear here only when supported by evidence.</p>
+          </div>
+          <div class="identity-pill">
+            <span class="status-dot"></span>
+            <span id="identityLabel"></span>
+          </div>
         </div>
 
-        <form id="dealForm" class="form">
-          <input name="company" placeholder="Company" required />
-          <input name="title" placeholder="Opportunity title" required />
-          <input name="stage" placeholder="Stage" value="New" />
-          <input name="value" placeholder="Estimated value" type="number" />
-          <input name="nextAction" placeholder="Next action" value="Review" />
-          <textarea name="notes" placeholder="Notes"></textarea>
-          <button class="primary-btn" type="submit">Save deal</button>
-        </form>
-      </div>
-    </div>
-  </div>
+        <div class="empty-state">
+          <div class="empty-mark">✓</div>
+          <div>
+            <strong>NO MATERIAL SIGNALS</strong>
+            <p>RALPH will not manufacture an issue to fill the screen.</p>
+          </div>
+        </div>
 
+        <div class="boundary-card">
+          <div class="boundary-row"><span>Identity</span><strong>Verified</strong></div>
+          <div class="boundary-row"><span>Business authority</span><strong>Server verified</strong></div>
+          <div class="boundary-row"><span>Decision autonomy</span><strong>Level ≤ 3</strong></div>
+        </div>
+      </section>
+
+      <section id="fatalState" class="state-card hidden">
+        <div class="eyebrow danger-text">ACCESS CLOSED</div>
+        <h1>RALPH authentication is unavailable.</h1>
+        <p class="lede">No business data has been opened.</p>
+      </section>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
   <script src="/app.js"></script>
 </body>
 </html>

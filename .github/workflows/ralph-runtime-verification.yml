@@ -1,0 +1,96 @@
+name: RALPH Runtime Verification
+
+on:
+  push:
+    branches:
+      - ralph-2-foundation
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ralph-runtime-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  runtime-verification:
+    if: github.ref == 'refs/heads/ralph-2-foundation' || github.head_ref == 'ralph-2-foundation'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install from committed lockfile
+        run: npm ci
+
+      - name: Verify lockfile is unchanged
+        run: git diff --exit-code -- package.json package-lock.json
+
+      - name: Automated tests
+        run: npm test
+
+      - name: Syntax and check gate
+        run: npm run check
+
+      - name: Start server and run unauthenticated smoke tests
+        shell: bash
+        env:
+          NODE_ENV: test
+          PORT: '3000'
+          SUPABASE_URL: https://example.invalid
+          SUPABASE_PUBLISHABLE_KEY: ci-public-placeholder
+        run: |
+          set -euo pipefail
+          node src/server.js > /tmp/ralph-server.log 2>&1 &
+          SERVER_PID=$!
+          cleanup() {
+            kill "$SERVER_PID" 2>/dev/null || true
+            wait "$SERVER_PID" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          for attempt in {1..20}; do
+            if curl --fail --silent --show-error http://127.0.0.1:3000/api/health > /tmp/health.json; then
+              break
+            fi
+            if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+              cat /tmp/ralph-server.log
+              exit 1
+            fi
+            sleep 0.5
+          done
+
+          node -e "const fs=require('fs');const h=JSON.parse(fs.readFileSync('/tmp/health.json','utf8'));if(!h.ok||h.app!=='RALPH'||h.status!=='live')process.exit(1)"
+
+          assert_denied() {
+            local label="$1"
+            local token="${2:-}"
+            local body="/tmp/${label}.json"
+            local code
+            if [ -n "$token" ]; then
+              code=$(curl --silent --show-error --output "$body" --write-out '%{http_code}' -H "Authorization: Bearer $token" http://127.0.0.1:3000/api/deals)
+            else
+              code=$(curl --silent --show-error --output "$body" --write-out '%{http_code}' http://127.0.0.1:3000/api/deals)
+            fi
+            test "$code" = "401"
+            node -e "const fs=require('fs');const b=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));if(!b.error||!['AUTH_REQUIRED','AUTH_INVALID'].includes(b.error.code))process.exit(1);if(Array.isArray(b)||Object.prototype.hasOwnProperty.call(b,'deals'))process.exit(1)" "$body"
+          }
+
+          assert_denied anonymous
+          assert_denied malformed 'not-a-real-jwt'
+
+          cat /tmp/ralph-server.log
