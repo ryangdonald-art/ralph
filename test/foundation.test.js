@@ -8,12 +8,25 @@ const { economicImpact, canExecute, PERMISSION_LEVELS, validateRalphOutput } = r
 const { validateSherlockFinding, validateRatChallenge } = require('../src/agents/contracts');
 const { ExecutionGuard } = require('../src/services/executionGuard');
 const { validateDeal } = require('../src/security/validateDeal');
+const { loadMembership } = require('../src/security/requireAuthorization');
 const { JsonRepository } = require('../src/repositories/jsonRepository');
 const { AppError } = require('../src/domain/errors');
 
 const base = { asOf:'2026-09-16', cashInBank:1000, receipts:[], committedPayments:[], forecastPayments:[], productionRequirements:[] };
 const r=(id,amount,dueDate,status='OPEN')=>({id,amount,dueDate,status});
 const p=(id,amount,status)=>({id,amount,...(status ? {status} : {})});
+
+async function withMockFetch(response, fn) {
+  const original = global.fetch;
+  global.fetch = async () => response;
+  try { return await fn(); } finally { global.fetch = original; }
+}
+
+function membershipResponse(rows, ok = true) {
+  return { ok, json: async () => rows };
+}
+
+const authzReq = () => ({ identity:{ id:'user-1' }, accessToken:'synthetic-token' });
 
 test('normal liquidity emits no signal',()=>assert.equal(detectCashFlowDanger({...base,committedPayments:[p('p1',500)]}).signal,null));
 test('short-term committed deficit emits signal',()=>assert.equal(detectCashFlowDanger({...base,committedPayments:[p('p1',1500)]}).signal.exposure,500));
@@ -43,4 +56,10 @@ test('missing identity maps to 401 rather than internal error',()=>assert.equal(
 test('invalid identity maps to 401 rather than internal error',()=>assert.equal(new AppError('AUTH_INVALID','invalid authentication').status,401));
 test('auth outage fails closed',()=>assert.equal(new AppError('AUTH_UNAVAILABLE','authentication unavailable').status,503));
 test('authorization source rejects ambiguous membership result sets',()=>{const source=fs.readFileSync(path.join(__dirname,'..','src','security','requireAuthorization.js'),'utf8'); assert.match(source,/!Array\.isArray\(rows\) \|\| rows\.length !== 1/);});
+test('authorization accepts one active known-role membership for the authenticated identity', async()=>withMockFetch(membershipResponse([{user_id:'user-1',organization_key:'synthetic',role:'VIEWER',active:true}]), async()=>assert.equal((await loadMembership(authzReq())).role,'VIEWER')));
+test('authorization rejects duplicate membership rows', async()=>withMockFetch(membershipResponse([{user_id:'user-1',organization_key:'a',role:'VIEWER',active:true},{user_id:'user-1',organization_key:'b',role:'ADMIN',active:true}]), async()=>assert.rejects(loadMembership(authzReq()), error=>error.code==='AUTHZ_DENIED' && error.status===403)));
+test('authorization rejects inactive membership', async()=>withMockFetch(membershipResponse([{user_id:'user-1',organization_key:'synthetic',role:'ADMIN',active:false}]), async()=>assert.rejects(loadMembership(authzReq()), error=>error.code==='AUTHZ_DENIED' && error.status===403)));
+test('authorization rejects unknown role', async()=>withMockFetch(membershipResponse([{user_id:'user-1',organization_key:'synthetic',role:'OWNER',active:true}]), async()=>assert.rejects(loadMembership(authzReq()), error=>error.code==='AUTHZ_DENIED' && error.status===403)));
+test('authorization rejects identity mismatch even if membership row is returned', async()=>withMockFetch(membershipResponse([{user_id:'attacker',organization_key:'synthetic',role:'ADMIN',active:true}]), async()=>assert.rejects(loadMembership(authzReq()), error=>error.code==='AUTHZ_DENIED' && error.status===403)));
+test('authorization rejects upstream non-success responses', async()=>withMockFetch(membershipResponse([], false), async()=>assert.rejects(loadMembership(authzReq()), error=>error.code==='AUTHZ_DENIED' && error.status===403)));
 test('browser source contains no server/service-role credential name',()=>{const source=fs.readFileSync(path.join(__dirname,'..','public','app.js'),'utf8'); assert.equal(/service[_-]?role|server[_-]?key|sb_secret_/i.test(source),false);});
