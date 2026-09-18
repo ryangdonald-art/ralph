@@ -42,4 +42,5 @@ test('corrupt JSON is not silently converted to empty data',()=>{const dir=fs.mk
 test('missing identity maps to 401 rather than internal error',()=>assert.equal(new AppError('AUTH_REQUIRED','authentication required').status,401));
 test('invalid identity maps to 401 rather than internal error',()=>assert.equal(new AppError('AUTH_INVALID','invalid authentication').status,401));
 test('auth outage fails closed',()=>assert.equal(new AppError('AUTH_UNAVAILABLE','authentication unavailable').status,503));
+test('authorization source rejects ambiguous membership result sets',()=>{const source=fs.readFileSync(path.join(__dirname,'..','src','security','requireAuthorization.js'),'utf8'); assert.match(source,/!Array\.isArray\(rows\) \|\| rows\.length !== 1/);});
 test('browser source contains no server/service-role credential name',()=>{const source=fs.readFileSync(path.join(__dirname,'..','public','app.js'),'utf8'); assert.equal(/service[_-]?role|server[_-]?key|sb_secret_/i.test(source),false);});
