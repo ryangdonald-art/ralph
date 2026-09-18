@@ -29,7 +29,10 @@ async function loadMembership(req) {
 
   if (!response.ok) throw new AppError('AUTHZ_DENIED', 'not authorized for RALPH', 403);
   const rows = await response.json();
-  const membership = Array.isArray(rows) ? rows[0] : null;
+  if (!Array.isArray(rows) || rows.length !== 1) {
+    throw new AppError('AUTHZ_DENIED', 'not authorized for RALPH', 403);
+  }
+  const membership = rows[0];
   if (!membership || membership.active !== true || !ROLES.includes(membership.role)) {
     throw new AppError('AUTHZ_DENIED', 'not authorized for RALPH', 403);
   }
