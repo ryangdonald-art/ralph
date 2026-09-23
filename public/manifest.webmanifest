@@ -1,0 +1,14 @@
+{
+  "name": "RALPH",
+  "short_name": "RALPH",
+  "description": "Ryan's Autonomous Logic & Profit Heuristic",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#06344B",
+  "theme_color": "#06344B",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

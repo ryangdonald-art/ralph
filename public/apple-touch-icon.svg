@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#06344B"/>
+  <path d="M0 360C115 310 173 348 264 298c85-47 151-123 248-151v365H0Z" fill="#075C79"/>
+  <text x="256" y="292" text-anchor="middle" font-family="Arial,sans-serif" font-size="88" font-weight="800" letter-spacing="10" fill="#FFFFFF">RALPH</text>
+  <rect x="96" y="329" width="320" height="8" rx="4" fill="#1688C1"/>
+</svg>
