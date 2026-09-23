@@ -9,6 +9,9 @@
   const authenticatedShell = document.getElementById('authenticatedShell');
   const identityLabel = document.getElementById('identityLabel');
   const fatalState = document.getElementById('fatalState');
+  const attentionList = document.getElementById('attentionList');
+  const runSyntheticBtn = document.getElementById('runSyntheticBtn');
+  let currentSession=null;
 
   let client;
 
@@ -38,7 +41,31 @@
     return data && data.authenticated ? data.user : null;
   }
 
+  async function api(path, options={}) {
+    if(!currentSession?.access_token) throw new Error('AUTH_REQUIRED');
+    const response=await fetch(path,{...options,headers:{Authorization:`Bearer ${currentSession.access_token}`,'Content-Type':'application/json',Accept:'application/json',...(options.headers||{})},cache:'no-store'});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok) throw new Error(data?.error?.message||'REQUEST_FAILED');
+    return data;
+  }
+
+  async function loadAttention(){
+    if(!attentionList) return;
+    const data=await api('/api/attention');
+    attentionList.replaceChildren();
+    if(!data.items?.length){ attentionList.textContent='No actions awaiting approval.'; return; }
+    data.items.forEach(item=>{
+      const card=document.createElement('div'); card.className='boundary-card';
+      const title=document.createElement('strong'); title.textContent=item.action_type;
+      const p=document.createElement('p'); p.textContent=item.requested_action?.text||'Review action';
+      const btn=document.createElement('button'); btn.className='primary-btn'; btn.type='button'; btn.textContent='Approve & execute';
+      btn.addEventListener('click',async()=>{btn.disabled=true; try{await api(`/api/actions/${encodeURIComponent(item.id)}/approve-execute`,{method:'POST'}); await loadAttention();}catch(e){btn.textContent='Approval failed';}});
+      card.append(title,p,btn); attentionList.append(card);
+    });
+  }
+
   async function renderSession(session) {
+    currentSession=session;
     const identity = await verifyWithServer(session);
     if (!identity) {
       identityLabel.textContent = '';
@@ -47,6 +74,7 @@
     }
     identityLabel.textContent = identity.email || 'Verified user';
     showOnly(authenticatedShell);
+    await loadAttention();
   }
 
   async function boot() {
@@ -86,6 +114,13 @@
     } finally {
       signInBtn.disabled = false;
     }
+  });
+
+  if(runSyntheticBtn) runSyntheticBtn.addEventListener('click',async()=>{
+    runSyntheticBtn.disabled=true;
+    try{ await api('/api/synthetic/cash-flow',{method:'POST'}); await loadAttention(); }
+    catch(e){ runSyntheticBtn.textContent='Synthetic test failed'; }
+    finally{ runSyntheticBtn.disabled=false; }
   });
 
   signOutBtn.addEventListener('click', async () => {
