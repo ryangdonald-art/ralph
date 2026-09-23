@@ -17,9 +17,7 @@ function urlEnv(name) {
 }
 
 const storageProvider = (process.env.STORAGE_PROVIDER || 'json').toLowerCase();
-if (storageProvider !== 'json') {
-  throw new Error(`Unsupported STORAGE_PROVIDER: ${storageProvider}. Supabase persistence is not configured.`);
-}
+if (!['json','supabase'].includes(storageProvider)) throw new Error(`Unsupported STORAGE_PROVIDER: ${storageProvider}`);
 
 module.exports = Object.freeze({
   nodeEnv: process.env.NODE_ENV || 'development',
