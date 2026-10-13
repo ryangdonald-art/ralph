@@ -6,6 +6,9 @@ RALPH 2.0 is being developed as an executive operating instrument: detect what n
 
 ## Current development boundary
 
+- Upgrade review branch: `ralph-upgrade-2026-10-13`; see `docs/UPGRADE_STATUS_2026-10-13.md` for tested changes and remaining gates.
+- Runtime check on 13 October: web process responds, but the Supabase project is inactive. Full authenticated operation is not verified.
+- Legacy non-atomic execution is deliberately disabled in this upgrade; offline synthetic proof is available with `npm run demo:loop -- /tmp/ralph-proof.json`.
 - Working branch: `ralph-2-foundation`
 - PR #1 is a development checkpoint and must not be merged without explicit Ryan authorization.
 - V1 autonomy is capped at Level 3 with human approval.

@@ -39,6 +39,9 @@ async function loadMembership(req) {
   if (membership.user_id !== req.identity.id) {
     throw new AppError('AUTHZ_DENIED', 'authorization identity mismatch', 403);
   }
+  if (typeof membership.organization_key !== 'string' || !membership.organization_key.trim()) {
+    throw new AppError('AUTHZ_DENIED', 'organization membership is required');
+  }
   return Object.freeze(membership);
 }
 
@@ -56,4 +59,12 @@ function requireAuthorization(allowedRoles = ROLES) {
   };
 }
 
-module.exports = { ROLES, loadMembership, requireAuthorization };
+function requireLegacyOrganization(req, _res, next) {
+  // These temporary JSON files are a single Dealworx dataset, not a tenant store.
+  if (req.membership?.organization_key !== 'dealworx') {
+    return next(new AppError('AUTHZ_DENIED', 'legacy dataset is not available for this organization'));
+  }
+  next();
+}
+
+module.exports = { ROLES, loadMembership, requireAuthorization, requireLegacyOrganization };

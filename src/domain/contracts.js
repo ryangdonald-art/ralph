@@ -16,9 +16,14 @@ function economicImpact({ amount, currency='ZAR', state='ESTIMATED' }) {
 }
 
 function canExecute({ permissionLevel, approved=false, actionType }) {
+  if (!Number.isInteger(permissionLevel) || permissionLevel < 0) return false;
+  if (typeof actionType !== 'string' || !actionType.trim()) return false;
+  if (typeof approved !== 'boolean') return false;
   if (permissionLevel > V1_MAX_PERMISSION) return false;
+  // OBSERVE, RECOMMEND and PREPARE are not execution authority.
+  if (permissionLevel !== PERMISSION_LEVELS.EXECUTE_WITH_APPROVAL) return false;
   if (PROHIBITED_AUTONOMOUS_ACTIONS.includes(actionType) && !approved) return false;
-  return permissionLevel < PERMISSION_LEVELS.EXECUTE_WITH_APPROVAL || approved;
+  return approved;
 }
 
 function validateRalphOutput(output) {

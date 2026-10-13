@@ -1,5 +1,7 @@
 # RALPH 2.0 — Foundation Architecture Audit
 
+> Historical snapshot below, retained for provenance. Current status is in `UPGRADE_STATUS_2026-10-13.md`. Authentication/membership code and Supabase REST support have since been added; the old statements that authentication is absent and configuration rejects Supabase are superseded. Live database integration remains unverified because the project is inactive. Do not use this September snapshot as a current capability register.
+
 ## Status — 2026-09-16
 The foundation boundary is now implemented on `ralph-2-foundation`. This document distinguishes VERIFIED, PROPOSED and BLOCKED capability. Nothing in this document implies production readiness where authentication, real persistence or runtime verification is absent.
 

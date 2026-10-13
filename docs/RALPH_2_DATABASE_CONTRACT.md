@@ -1,6 +1,6 @@
 # RALPH 2.0 — Minimum Database Contract
 
-STATUS: PROPOSED ONLY. No migration has been executed. Supabase remains BLOCKED until the correct project is verified or creation is explicitly authorized.
+STATUS AS OF 13 OCTOBER 2026: This is a proposed design contract, not a recovered schema. The RALPH 2.0 project has been identified but is INACTIVE; live schema and migration queries timed out. This repository contains an audit-hardening migration but lacks the complete initial schema. Do not infer that no migration has ever run. Reconcile this document with actual schema, grants, policies and nullable confidence fields before deployment. See `UPGRADE_STATUS_2026-10-13.md`.
 
 All tables use UUID primary keys, `created_at timestamptz not null default now()`, `updated_at timestamptz`, and source provenance where applicable. Business rows must be scoped to an organization/company boundary before production RLS is enabled.
 

@@ -32,13 +32,40 @@ test('normal liquidity emits no signal',()=>assert.equal(detectCashFlowDanger({.
 test('short-term committed deficit emits signal',()=>assert.equal(detectCashFlowDanger({...base,committedPayments:[p('p1',1500)]}).signal.exposure,500));
 test('large future receivable is not available cash or overdue',()=>{const x=detectCashFlowDanger({...base,receipts:[r('r1',10000,'2026-09-30')],committedPayments:[p('p1',1500)]}); assert.equal(x.metrics.receiptsOverdue,0); assert.equal(x.metrics.availableLiquidity,1000); assert.equal(x.signal.exposure,500);});
 test('genuinely overdue receivable is classified but not treated as cash',()=>{const x=detectCashFlowDanger({...base,receipts:[r('r1',800,'2026-09-01')]}); assert.equal(x.metrics.receiptsOverdue,800); assert.equal(x.metrics.availableLiquidity,1000);});
-test('receipt due today can contribute to available liquidity',()=>assert.equal(detectCashFlowDanger({...base,receipts:[r('r1',300,'2026-09-16')]}).metrics.availableLiquidity,1300));
+test('unpaid receipt due today cannot suppress the liquidity warning',()=>{const x=detectCashFlowDanger({...base,cashInBank:0,receipts:[r('r1',100000,'2026-09-16')],committedPayments:[p('p1',100000)]}); assert.equal(x.metrics.receiptsDue,100000); assert.equal(x.metrics.availableLiquidity,0); assert.equal(x.signal.exposure,100000);});
+test('paid receipts are not added twice to bank cash',()=>{const x=detectCashFlowDanger({...base,receipts:[r('r1',1000,'2026-09-16','PAID')]}); assert.equal(x.metrics.expectedReceipts,0); assert.equal(x.metrics.availableLiquidity,1000);});
+test('same UTC calendar day remains due at midday',()=>{const x=detectCashFlowDanger({...base,asOf:'2026-09-16T12:45:00Z',receipts:[r('r1',300,'2026-09-16')]}); assert.equal(x.metrics.receiptsDue,300); assert.equal(x.metrics.receiptsOverdue,0);});
+test('timezone-qualified receipt is classified by UTC calendar day',()=>{const x=detectCashFlowDanger({...base,receipts:[r('r1',300,'2026-09-17T01:00:00+02:00')]}); assert.equal(x.metrics.receiptsDue,300);});
+test('invalid and ambiguous asOf dates are rejected',()=>{for (const asOf of [null,undefined,0,'2026-02-30','09/16/2026','2026-09-16T12:00:00']) assert.throws(()=>detectCashFlowDanger({...base,asOf}),/asOf/);});
+test('invalid receipt dates remain unknown rather than silently rolling over',()=>{const x=detectCashFlowDanger({...base,receipts:[r('r1',300,'2026-02-30'),r('r2',200,'09/16/2026')]}); assert.equal(x.metrics.receiptsUnknownDate,500); assert.equal(x.metrics.receiptsOverdue,0);});
 test('committed production requirement affects liquidity',()=>assert.equal(detectCashFlowDanger({...base,productionRequirements:[p('prod1',1400,'COMMITTED')]}).signal.exposure,400));
 test('forecast production requirement does not become committed',()=>assert.equal(detectCashFlowDanger({...base,productionRequirements:[p('prod1',1400,'FORECAST')]}).signal,null));
 test('unknown production commitment remains unknown and does not become committed',()=>{const x=detectCashFlowDanger({...base,productionRequirements:[p('prod1',1400)]}); assert.equal(x.signal,null); assert.equal(x.metrics.unknownProductionRequirements,1400);});
 test('forecast payment does not become committed payment',()=>assert.equal(detectCashFlowDanger({...base,forecastPayments:[p('f1',5000)]}).signal,null));
 test('missing receipt date remains unknown',()=>assert.equal(detectCashFlowDanger({...base,receipts:[r('r1',700,null)]}).metrics.receiptsUnknownDate,700));
 test('duplicate liability id is counted once',()=>assert.equal(detectCashFlowDanger({...base,committedPayments:[p('p1',700),p('p1',700)]}).metrics.committedPayments,700));
+test('conflicting duplicate liabilities fail closed in either order',()=>{
+  for (const committedPayments of [[p('p1',10),p('p1',100000)],[p('p1',100000),p('p1',10)]]) {
+    assert.throws(()=>detectCashFlowDanger({...base,committedPayments}),/conflicting duplicate id/);
+  }
+});
+test('conflicting duplicate receipt status date and currency cannot be silently discarded',()=>{
+  const first=r('r1',1000,'2026-09-16');
+  for (const patch of [{status:'PAID'},{dueDate:'2026-09-17'},{currency:'USD'},{amount:2000}]) {
+    assert.throws(()=>detectCashFlowDanger({...base,receipts:[first,{...first,...patch}]}),/conflicting duplicate id/);
+  }
+});
+test('conflicting duplicate production status cannot conceal a commitment',()=>{
+  assert.throws(()=>detectCashFlowDanger({...base,productionRequirements:[p('prod1',100000,'FORECAST'),p('prod1',100000,'COMMITTED')]}),/conflicting duplicate id/);
+});
+test('exact duplicate receipts and production requirements remain idempotent',()=>{
+  const receipt=r('r1',300,'2026-09-16'); const production=p('prod1',1500,'COMMITTED');
+  const result=detectCashFlowDanger({...base,receipts:[receipt,{...receipt}],productionRequirements:[production,{...production}]});
+  assert.equal(result.metrics.expectedReceipts,300); assert.equal(result.signal.exposure,500);
+});
+test('negative nonfinite and nonnumeric materiality thresholds are rejected',()=>{
+  for (const materialityThreshold of [-1,NaN,Infinity,'100']) assert.throws(()=>detectCashFlowDanger(base,{materialityThreshold}),/materialityThreshold/);
+});
 test('revenue/profit fields cannot inflate liquidity',()=>assert.equal(detectCashFlowDanger({...base,revenue:100000,profit:50000,committedPayments:[p('p1',2000)]}).signal.exposure,1000));
 test('materiality threshold suppresses immaterial gap',()=>assert.equal(detectCashFlowDanger({...base,committedPayments:[p('p1',1050)]},{materialityThreshold:100}).signal,null));
 test('economic impact state is explicit',()=>assert.deepEqual(economicImpact({amount:100}),{amount:100,currency:'ZAR',state:'ESTIMATED'}));

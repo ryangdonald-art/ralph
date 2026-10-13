@@ -1,4 +1,5 @@
 const crypto=require('crypto');
+const { AppError }=require('../domain/errors');
 const { detectCashFlowDanger }=require('../detectors/cashFlowDanger');
 
 function syntheticScenario(){
@@ -8,9 +9,9 @@ function analyseScenario(input){
   const detected=detectCashFlowDanger(input,{materialityThreshold:25000});
   if(!detected.signal) return {detected, sherlock:null, rat:null, ralph:null};
   const exposure=detected.signal.exposure;
-  const sherlock={status:'COMPLETE',anomaly:`Committed near-term requirements exceed available liquidity by R${exposure.toLocaleString('en-ZA')}`,baseline:'Available liquidity should cover explicitly committed near-term requirements.',materiality:'MATERIAL',supportingEvidence:['cashInBank','committedPayments','committedProductionRequirements'],contradictoryEvidence:[],hypotheses:['Timing mismatch between cash availability and committed outflows.'],missingInformation:['No future or overdue receivable is treated as cash.'],economicExposure:exposure,confidence:0.98};
-  const rat={challenges:['Do not assume forecast or overdue receipts are available cash.'],contradictoryEvidence:[],missingEvidence:['Bank balance and payment timing should be refreshed before a real-world action.'],alternativeHypotheses:['A committed payment may be reschedulable, but this is not assumed.'],risk:'Acting on stale liquidity data could create a false alarm.',revisedConfidence:0.94,falsificationEvidence:['Verified available liquidity at or above committed requirement would falsify the alert.']};
-  const ralph={type:'TASK',summary:'Verify bank liquidity and committed payment timing before releasing the next cash commitment.',rationale:`Synthetic test shows a R${exposure.toLocaleString('en-ZA')} liquidity gap. No payment, contract or external communication is authorised.`,confidence:0.94,permissionLevel:3,actionType:'REQUEST_INFO'};
+  const sherlock={status:'COMPLETE',anomaly:`Committed near-term requirements exceed available liquidity by R${exposure.toLocaleString('en-ZA')}`,baseline:'Available liquidity should cover explicitly committed near-term requirements.',materiality:'MATERIAL',supportingEvidence:['cashInBank','committedPayments','committedProductionRequirements'],contradictoryEvidence:[],hypotheses:['Timing mismatch between cash availability and committed outflows.'],missingInformation:['No future or overdue receivable is treated as cash.'],economicExposure:exposure,confidence:null,reviewMethod:'DETERMINISTIC_TEMPLATE'};
+  const rat={challenges:['Do not assume forecast or overdue receipts are available cash.'],contradictoryEvidence:[],missingEvidence:['Bank balance and payment timing should be refreshed before a real-world action.'],alternativeHypotheses:['A committed payment may be reschedulable, but this is not assumed.'],risk:'Acting on stale liquidity data could create a false alarm.',revisedConfidence:null,reviewMethod:'DETERMINISTIC_TEMPLATE',falsificationEvidence:['Verified available liquidity at or above committed requirement would falsify the alert.']};
+  const ralph={type:'TASK',summary:'Verify bank liquidity and committed payment timing before releasing the next cash commitment.',rationale:`Synthetic test shows a R${exposure.toLocaleString('en-ZA')} liquidity gap. No payment, contract or external communication is authorised.`,confidence:null,reviewMethod:'DETERMINISTIC_TEMPLATE',permissionLevel:3,actionType:'REQUEST_INFO'};
   return {detected,sherlock,rat,ralph};
 }
 async function persistSyntheticLoop({repo,userId}){
@@ -26,16 +27,9 @@ async function persistSyntheticLoop({repo,userId}){
   await repo.insert('agent_runs',{agent:'RALPH',provider:'DETERMINISTIC',model:'ralph-contract-v1',signal_id:signal.id,investigation_id:investigation.id,decision_id:decision.id,input_refs:[investigation.id],output:analysis.ralph,confidence:analysis.ralph.confidence,completed_at:new Date().toISOString(),created_by:userId});
   return {status:'AWAITING_HUMAN_APPROVAL',signal,investigation,decision,action};
 }
-async function approveAndExecute({repo,userId,actionId}){
-  const actions=await repo.list('actions',`id=eq.${encodeURIComponent(actionId)}&organization_key=eq.dealworx&select=*`);
-  if(!Array.isArray(actions)||actions.length!==1) throw new Error('Action not found');
-  const action=actions[0];
-  if(action.permission_level>3) throw new Error('Autonomous execution is prohibited');
-  if(action.status==='EXECUTED') return {action,duplicatePrevented:true};
-  if(action.status!=='AWAITING_APPROVAL') throw new Error('Action is not awaiting approval');
-  const approval=await repo.insert('approvals',{action_id:action.id,status:'APPROVED',approver_id:userId,approval_timestamp:new Date().toISOString(),notes:'Approved by authenticated human in RALPH.'});
-  const executed=await repo.update('actions',action.id,{status:'EXECUTED',execution_result:{kind:'INTERNAL_TASK_CREATED',text:action.requested_action?.text||'Request information',executed_at:new Date().toISOString(),synthetic:true},updated_at:new Date().toISOString()});
-  const outcome=await repo.insert('outcomes',{action_id:action.id,decision_id:action.decision_id,outcome_type:'SYNTHETIC_LOOP_COMPLETED',summary:'Approved internal request-for-information action executed once; outcome captured for learning.',economic_amount:0,currency:'ZAR',economic_state:'VERIFIED',evidence_refs:[approval.id],measured_at:new Date().toISOString(),provenance:{synthetic:true},created_by:userId});
-  return {approval,action:executed,outcome,duplicatePrevented:false};
+// Separate REST writes cannot guarantee exactly-once approval and execution.
+// Keep this route fail-closed until an authenticated transactional command exists.
+async function approveAndExecute(){
+  throw new AppError('STORAGE_UNAVAILABLE', 'Execution disabled: atomic approval, durable task completion and outcome verification have not been established. Use the explicitly synthetic local workflow for regression demonstrations.');
 }
 module.exports={syntheticScenario,analyseScenario,persistSyntheticLoop,approveAndExecute};

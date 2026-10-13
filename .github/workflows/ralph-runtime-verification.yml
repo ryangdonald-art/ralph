@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - ralph-2-foundation
+      - ralph-upgrade-2026-10-13
   pull_request:
     branches:
       - main
+      - ralph-2-foundation
 
 permissions:
   contents: read
@@ -17,7 +19,6 @@ concurrency:
 
 jobs:
   runtime-verification:
-    if: github.ref == 'refs/heads/ralph-2-foundation' || github.head_ref == 'ralph-2-foundation'
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
