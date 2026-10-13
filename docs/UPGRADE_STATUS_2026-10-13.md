@@ -4,6 +4,14 @@ Owner authority: Ryan Graham Donald's master reconstruction directive, 12 Octobe
 
 ## Evidence and changes
 
+### Latest memory and transactional candidate
+
+The current application suite passes 87 tests, including 13 new scoped-memory and integration cases. All 94 recovered register entries are preserved with their original evidence labels; only explicitly selected standing instructions and labelled current-directive interpretations become active. Fresh-process retrieval, historical scoring exclusion, personal-format override boundaries, injected-source non-promotion and archive corruption rejection are tested. Repository working instructions load this record before substantive work. This is not universal ChatGPT recall or a business-data retrieval service.
+
+The separate transactional SQL candidate implements atomic synthetic preparation, ADMIN approval, durable internal-task creation, assigned completion, observed synthetic outcome, separately reviewed lesson and later retrieval. The later lesson adds an enforced observation-timestamp requirement without changing approval authority. Distinct deterministic reviewer records are not independently reasoning models. See the transactional candidate report for isolated test results and exact limitations. Neither SQL proposal is applied and existing HTTP write routes remain paused.
+
+### Earlier repair baseline
+
 Baseline: 37 tests passed, including a test that incorrectly counted an unpaid receipt due today as liquidity. Candidate after restored-schema follow-up: 74 tests passed locally, plus complete JavaScript syntax checks. A separate review agent reran and confirmed the same results. Local Node version is 24.19.0; CI remains pinned to Node 20. The tests establish the bounded behaviours below, not production readiness.
 
 | Capability / defect | Change and evidence | Remaining boundary |

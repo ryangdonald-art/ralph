@@ -26,7 +26,7 @@ These are results of the recovered schema under emulated authenticated database 
 
 This deliberately narrows previously allowed behaviour. It is a consequential access-control change and requires review before deployment. Constraints validate existing rows and abort the transaction if cross-organisation references already exist. Inspect existing data first; do not silently relabel/delete records to force validation. Audit any existing privileged service consumers separately: a service role bypasses RLS.
 
-The SQL is a bounded safety candidate, not a complete execution design. Preparation remains non-atomic. Synthetic preparation and execution HTTP routes must remain disabled until transactional commands, actual authentication, access testing and an accountable task/outcome path are established. No lesson or task tables were invented to claim completion.
+The SQL is a bounded safety candidate, not a complete execution design. Preparation remains non-atomic. Synthetic preparation and execution HTTP routes must remain disabled until transactional commands, actual authentication, access testing and an accountable task/outcome path are established. That repair proposal alone does not add task or lesson tables. A separate, explicitly local transactional candidate now implements them; see TRANSACTIONAL_CANDIDATE.md for its 31-check proof and limits.
 
 ## Validation
 
