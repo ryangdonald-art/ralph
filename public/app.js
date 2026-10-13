@@ -129,12 +129,8 @@
     }
   });
 
-  if(runSyntheticBtn) runSyntheticBtn.addEventListener('click',async()=>{
-    runSyntheticBtn.disabled=true;
-    try{ await api('/api/synthetic/cash-flow',{method:'POST'}); await loadAttention(); }
-    catch(e){ workflowMessage.textContent=e.message; }
-    finally{ runSyntheticBtn.disabled=false; }
-  });
+  // Preparation remains disabled until a verified atomic database command exists.
+  if(runSyntheticBtn) runSyntheticBtn.disabled=true;
 
   signOutBtn.addEventListener('click', async () => {
     if (!client) return;

@@ -1,0 +1,9 @@
+drop policy if exists entities_authenticated_read on public.entities;
+drop policy if exists signals_authenticated_read on public.signals;
+drop policy if exists evidence_authenticated_read on public.evidence;
+drop policy if exists investigations_authenticated_read on public.investigations;
+drop policy if exists decisions_authenticated_read on public.decisions;
+drop policy if exists actions_authenticated_read on public.actions;
+drop policy if exists outcomes_authenticated_read on public.outcomes;
+drop policy if exists agent_runs_authenticated_read on public.agent_runs;
+drop policy if exists approvals_authenticated_read on public.approvals;

@@ -6,7 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const {execFileSync} = require('node:child_process');
 const {ControlledWorkflow} = require('../src/services/controlledWorkflow');
-const {syntheticScenario, analyseScenario, approveAndExecute} = require('../src/services/cashFlowLoop');
+const {syntheticScenario, analyseScenario, approveAndExecute, persistSyntheticLoop} = require('../src/services/cashFlowLoop');
 
 async function fixture(t) {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ralph-loop-'));
@@ -25,6 +25,12 @@ async function completed(w) {
 test('legacy execution fails closed before any repository calls', async()=>{
   const repo = new Proxy({}, {get(){throw new Error('Repository must not be used');}});
   await assert.rejects(approveAndExecute({repo}), error => error.status === 503 && /atomic approval/.test(error.message));
+});
+test('synthetic preparation fails closed without reading or writing the repository', async()=>{
+  let accesses=0;
+  const repo=new Proxy({}, {get(){accesses++;throw new Error('Repository must not be used');}});
+  await assert.rejects(persistSyntheticLoop({repo,userId:'fixture'}), error=>error.status===503 && /preparation is paused/.test(error.message));
+  assert.equal(accesses,0);
 });
 test('deterministic review has no fabricated confidence', ()=>{
   const result=analyseScenario(syntheticScenario());

@@ -1,0 +1,30 @@
+{
+  "status": "PASS",
+  "baseline": [
+    "DEFECT reproduced: operator inserts own-tenant evidence linked to other-tenant signal.",
+    "DEFECT reproduced: operator marks action EXECUTED with fabricated result, no approval.",
+    "DEFECT reproduced: current preparation agent_runs INSERT denied (42501).",
+    "DEFECT reproduced: operator records another user as created_by.",
+    "DEFECT reproduced: operator inserts REALIZED outcome without verification."
+  ],
+  "repair": [
+    "Cross-organization parent blocked by composite FK.",
+    "Execution status update denied.",
+    "Forged actor denied.",
+    "Synthetic same-organization evidence accepted.",
+    "Deterministic synthetic agent run accepted with NULL confidence.",
+    "Invented numerical template confidence denied.",
+    "Direct approval insert denied.",
+    "Direct outcome insert denied.",
+    "Reads isolated to own organization.",
+    "Viewer write denied.",
+    "Inactive member read/write denied.",
+    "Anonymous read denied."
+  ],
+  "limits": [
+    "Disposable PGlite; auth.users simplified and auth.uid emulated from session setting.",
+    "Only pgcrypto CREATE EXTENSION omitted; native gen_random_uuid used. Recovered SQL files unchanged.",
+    "No JWT validation, PostgREST, live project or actual owner sign-in exercised.",
+    "Prepared inserts remain multistep and nonatomic; execution and synthetic HTTP route must remain disabled."
+  ]
+}

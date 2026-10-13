@@ -4,7 +4,7 @@ Owner authority: Ryan Graham Donald's master reconstruction directive, 12 Octobe
 
 ## Evidence and changes
 
-Baseline: 37 tests passed, including a test that incorrectly counted an unpaid receipt due today as liquidity. Candidate: 73 tests passed locally, plus complete JavaScript syntax checks. A separate review agent reran and confirmed the same results. Local Node version is 24.19.0; CI remains pinned to Node 20. The tests establish the bounded behaviours below, not production readiness.
+Baseline: 37 tests passed, including a test that incorrectly counted an unpaid receipt due today as liquidity. Candidate after restored-schema follow-up: 74 tests passed locally, plus complete JavaScript syntax checks. A separate review agent reran and confirmed the same results. Local Node version is 24.19.0; CI remains pinned to Node 20. The tests establish the bounded behaviours below, not production readiness.
 
 | Capability / defect | Change and evidence | Remaining boundary |
 |---|---|---|
@@ -18,7 +18,7 @@ Baseline: 37 tests passed, including a test that incorrectly counted an unpaid r
 | Controlled workflow | Local synthetic evidence, fixture approval, local task, completion, outcome, reviewed lesson and later application | Fixture actors, not live human identity or business results |
 | Replay/recovery | Exclusive writer, atomic snapshot, stage/state validation, conflict rejection and failure tests | Single-host filesystem assumptions; no tamper-proof or distributed guarantee |
 | LinkedIn delivery | Offline exact-text count, review hashes, fact-status/source requirements, hook reuse and experience gates | Human truth/voice judgment still needed; attestations can be wrong |
-| Phone surface | Queue failures are unknown, not empty; execution visibly paused; viewer preparation hidden | Browser interaction and real sign-in not verified here |
+| Phone surface | Queue failures are unknown, not empty; execution visibly paused; synthetic preparation visibly paused for all roles | Browser interaction and real sign-in not verified here |
 | Documentation/CI | Historical status explicitly superseded; new modules included in syntax checks; isolated branch CI enabled | CI result must be checked at its exact revision |
 
 ## Run and reproduce
@@ -37,7 +37,7 @@ For the editorial checker call `editorialGate` in `src/services/editorialGate.js
 
 ## Current runtime and release gate
 
-Read-only inspection found the phone web process deployed at the baseline commit and responding to health requests, with anonymous attention access denied. Supabase is INACTIVE and schema/migration inspection timed out. Both existing Render services auto-deploy commits to their tracked branches (`ralph-2-foundation` and `main`). Therefore publish changes only to the isolated review branch; a merge into the tracked foundation branch can cause a deployment.
+Read-only inspection found the phone web process deployed at the baseline commit and responding to health requests, with anonymous attention access denied. Supabase has now been restored to ACTIVE_HEALTHY. Ten public tables, six migrations and an active Dealworx administrator membership were recovered. Null confidence is compatible. Synthetic preparation is now fail-closed before writes because authenticated agent_runs insertion is denied; the previous sequence could partially persist five records. Real database policies still require reviewed hardening and atomic workflow commands. Both existing Render services auto-deploy commits to their tracked branches (`ralph-2-foundation` and `main`). Therefore publish changes only to the isolated review branch; a merge into the tracked foundation branch can cause a deployment.
 
 Before any production release:
 

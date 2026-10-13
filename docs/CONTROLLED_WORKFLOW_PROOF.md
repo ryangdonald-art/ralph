@@ -4,7 +4,7 @@ Date: 13 October 2026. This is an offline deterministic simulation. It is not a 
 
 ## Changes
 
-The legacy `approveAndExecute` implementation used separate REST calls to insert approval, mark an action executed and insert a synthetic outcome. There was no proven atomic command, durable task completion or verified result. It now returns a useful 503 error before touching storage. Read-only analysis and synthetic preparation remain available. Existing prepared records are not deleted or altered by this change.
+The legacy `approveAndExecute` implementation used separate REST calls to insert approval, mark an action executed and insert a synthetic outcome. There was no proven atomic command, durable task completion or verified result. It now returns a useful 503 error before touching storage. Read-only analysis remains available. Synthetic preparation is also paused after restored permissions proved the current sequence would write five records before a denied agent_runs INSERT. A zero-access regression prevents partial chains. Existing prepared records are not deleted or altered by this change.
 
 Fixed 0.98/0.94 confidence values are replaced with `null` and explicit `DETERMINISTIC_TEMPLATE` metadata. They were constants, not calibrated estimates. A live schema may reject nullable confidence; establish schema compatibility in an authorised staging environment before rollout. Do not reinstate invented confidence to bypass schema validation.
 
