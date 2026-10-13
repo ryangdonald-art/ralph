@@ -41,3 +41,7 @@ RALPH_PGLITE_MODULE=/absolute/path/to/disposable/node_modules/@electric-sql/pgli
 Limits: auth.users is a simplified fixture table; auth.uid() reads a session setting to emulate the subject. Only the pgcrypto CREATE EXTENSION statement is omitted in execution because native gen_random_uuid is available. Archival SQL files are unchanged. This tests PostgreSQL constraints, grants and RLS under role switching; it does not test JWT validation, PostgREST, live Supabase Auth, the actual owner's session, production access or production performance.
 
 Official source reviewed: https://supabase.com/docs/guides/database/postgres/row-level-security. The live schema is the authority for implementation; old architecture prose is not a migration specification.
+
+## Independent review limitations
+
+An independent reviewer reran all five baseline reproductions and twelve repair checks successfully. Organisation-matching foreign keys do not ensure references belong to the same investigation; JSON evidence/input references remain unchecked. Caller-supplied synthetic flags are labels, not source attestation. The proposed agent_runs policy checks deterministic metadata but does not require synthetic parent provenance or a parent reference. These limitations prevent any claim of complete evidence integrity or synthetic isolation. The proposal must not reenable either paused HTTP route.
