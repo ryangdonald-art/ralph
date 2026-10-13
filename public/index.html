@@ -46,8 +46,8 @@
         <div class="attention-head">
           <div>
             <div class="eyebrow">WHAT NEEDS MY ATTENTION?</div>
-            <h1>Nothing needs your attention.</h1>
-            <p class="lede">The secure boundary is open. Material issues will appear here only when supported by evidence.</p>
+            <h1 id="attentionHeading">Checking your attention queue.</h1>
+            <p class="lede">Review the evidence behind each item before taking action.</p>
           </div>
           <div class="identity-pill">
             <span class="status-dot"></span>
@@ -59,10 +59,12 @@
           <div class="empty-mark">✓</div>
           <div>
             <strong>ATTENTION QUEUE</strong>
-            <p id="attentionList">Loading approved business boundary…</p>
+            <div id="attentionList">Loading your queue…</div>
           </div>
         </div>
-        <button id="runSyntheticBtn" class="primary-btn" type="button">Run synthetic cash-flow proof</button>
+        <button id="runSyntheticBtn" class="primary-btn" type="button" disabled>Synthetic preparation paused</button>
+        <p>New synthetic cases are paused until the complete case can be saved safely.</p>
+        <p id="workflowMessage" class="message" role="status"></p>
 
         <div class="boundary-card">
           <div class="boundary-row"><span>Identity</span><strong>Verified</strong></div>

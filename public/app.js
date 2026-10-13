@@ -11,6 +11,8 @@
   const fatalState = document.getElementById('fatalState');
   const attentionList = document.getElementById('attentionList');
   const runSyntheticBtn = document.getElementById('runSyntheticBtn');
+  const attentionHeading = document.getElementById('attentionHeading');
+  const workflowMessage = document.getElementById('workflowMessage');
   let currentSession=null;
 
   let client;
@@ -38,7 +40,7 @@
     });
     if (!response.ok) return null;
     const data = await response.json();
-    return data && data.authenticated ? data.user : null;
+    return data && data.authenticated ? data : null;
   }
 
   async function api(path, options={}) {
@@ -53,13 +55,17 @@
     if(!attentionList) return;
     const data=await api('/api/attention');
     attentionList.replaceChildren();
-    if(!data.items?.length){ attentionList.textContent='No actions awaiting approval.'; return; }
+    attentionHeading.textContent=data.items?.length ? 'Items need your review.' : 'No actions awaiting approval.';
+    workflowMessage.textContent=data.executionEnabled ? '' : data.executionReason;
+    if(!data.items?.length){ attentionList.textContent='Your approval queue is empty.'; return; }
     data.items.forEach(item=>{
       const card=document.createElement('div'); card.className='boundary-card';
       const title=document.createElement('strong'); title.textContent=item.action_type;
       const p=document.createElement('p'); p.textContent=item.requested_action?.text||'Review action';
       const btn=document.createElement('button'); btn.className='primary-btn'; btn.type='button'; btn.textContent='Approve & execute';
-      btn.addEventListener('click',async()=>{btn.disabled=true; try{await api(`/api/actions/${encodeURIComponent(item.id)}/approve-execute`,{method:'POST'}); await loadAttention();}catch(e){btn.textContent='Approval failed';}});
+      btn.disabled=!data.executionEnabled;
+      if(btn.disabled) btn.textContent='Execution paused';
+      btn.addEventListener('click',async()=>{btn.disabled=true; try{await api(`/api/actions/${encodeURIComponent(item.id)}/approve-execute`,{method:'POST'}); await loadAttention();}catch(e){workflowMessage.textContent=e.message;btn.textContent='Retry approval';btn.disabled=false;}});
       card.append(title,p,btn); attentionList.append(card);
     });
   }
@@ -68,13 +74,20 @@
     currentSession=session;
     const identity = await verifyWithServer(session);
     if (!identity) {
+      currentSession=null;
       identityLabel.textContent = '';
       showOnly(loginForm);
       return;
     }
-    identityLabel.textContent = identity.email || 'Verified user';
+    identityLabel.textContent = identity.user.email || 'Verified user';
+    runSyntheticBtn.classList.toggle('hidden',!['ADMIN','OPERATOR'].includes(identity.membership?.role));
     showOnly(authenticatedShell);
-    await loadAttention();
+    try { await loadAttention(); }
+    catch(error) {
+      attentionHeading.textContent='Your queue could not be loaded.';
+      attentionList.textContent='Queue status is unknown. Try signing in again when the service is available.';
+      workflowMessage.textContent=error.message;
+    }
   }
 
   async function boot() {
@@ -116,12 +129,8 @@
     }
   });
 
-  if(runSyntheticBtn) runSyntheticBtn.addEventListener('click',async()=>{
-    runSyntheticBtn.disabled=true;
-    try{ await api('/api/synthetic/cash-flow',{method:'POST'}); await loadAttention(); }
-    catch(e){ runSyntheticBtn.textContent='Synthetic test failed'; }
-    finally{ runSyntheticBtn.disabled=false; }
-  });
+  // Preparation remains disabled until a verified atomic database command exists.
+  if(runSyntheticBtn) runSyntheticBtn.disabled=true;
 
   signOutBtn.addEventListener('click', async () => {
     if (!client) return;
@@ -129,6 +138,7 @@
     try { await client.auth.signOut(); }
     finally {
       identityLabel.textContent = '';
+      currentSession=null;
       showOnly(loginForm);
       signOutBtn.disabled = false;
     }

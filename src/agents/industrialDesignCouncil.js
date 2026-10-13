@@ -26,10 +26,54 @@ const REQUIRED_METRICS = Object.freeze([
   "capex","bom_cost"
 ]);
 
+const METRIC_UNITS = Object.freeze({
+  external_dimensions: ['mm', 'cm', 'm'],
+  operator_clearances: ['mm', 'cm', 'm'],
+  reach_zones: ['mm', 'cm', 'm'],
+  service_clearances: ['mm', 'cm', 'm'],
+  storage_capacity: ['L', 'm3'],
+  tray_capacity: ['trays'],
+  holding_capacity: ['items', 'trays', 'L'],
+  transactions_per_hour: ['transactions/hour'],
+  power_load: ['W', 'kW'],
+  cleaning_time: ['minutes', 'hours'],
+  service_access: ['description'],
+  assembly_time: ['minutes', 'hours'],
+  transport_volume: ['m3'],
+  capex: ['ZAR', 'USD', 'GBP', 'EUR', 'AED'],
+  bom_cost: ['ZAR', 'USD', 'GBP', 'EUR', 'AED'],
+});
+const record = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+const positive = value => typeof value === 'number' && Number.isFinite(value) && value > 0;
+const nonBlank = value => typeof value === 'string' && value.trim().length > 0;
+
+function metricErrors(metric, entry) {
+  if (!record(entry)) return ['must be a structured measurement'];
+  const errors = [];
+  if (!nonBlank(entry.source)) errors.push('source must identify the measurement record or document');
+  if (!METRIC_UNITS[metric].includes(entry.unit)) errors.push(`unit must be one of: ${METRIC_UNITS[metric].join(', ')}`);
+  if (metric === 'external_dimensions') {
+    if (!record(entry.value) || !['width', 'depth', 'height'].every(key => positive(entry.value[key]))) {
+      errors.push('value must contain positive finite width, depth and height');
+    }
+  } else if (metric === 'service_access') {
+    if (!nonBlank(entry.value)) errors.push('value must describe the service access arrangement');
+  } else if (!positive(entry.value)) {
+    errors.push('value must be a positive finite number');
+  } else if (['trays', 'items'].includes(entry.unit) && !Number.isSafeInteger(entry.value)) {
+    errors.push('count must be a positive safe integer');
+  }
+  return errors;
+}
+
 function evidenceGate(proposal = {}) {
-  const evidence = proposal.evidence || {};
-  const missing = REQUIRED_METRICS.filter((metric) => evidence[metric] === undefined || evidence[metric] === null);
-  return { passed: missing.length === 0, missing };
+  const evidence = record(proposal) && record(proposal.evidence) ? proposal.evidence : {};
+  const missing = REQUIRED_METRICS.filter(metric => !Object.hasOwn(evidence, metric) || evidence[metric] == null);
+  const invalid = REQUIRED_METRICS.filter(metric => !missing.includes(metric)).flatMap(metric => {
+    const reasons = metricErrors(metric, evidence[metric]);
+    return reasons.length ? [{ metric, reasons }] : [];
+  });
+  return { passed: missing.length === 0 && invalid.length === 0, missing, invalid };
 }
 
 function reviewPhysicalProposal(proposal = {}) {
@@ -49,4 +93,4 @@ function reviewPhysicalProposal(proposal = {}) {
   };
 }
 
-module.exports = { COUNCIL, REQUIRED_METRICS, evidenceGate, reviewPhysicalProposal };
+module.exports = { COUNCIL, REQUIRED_METRICS, METRIC_UNITS, evidenceGate, reviewPhysicalProposal };

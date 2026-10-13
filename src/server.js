@@ -6,7 +6,7 @@ const logger = require('./telemetry/logger');
 const { AppError } = require('./domain/errors');
 const { validateDeal } = require('./security/validateDeal');
 const { requireAuth, authConfigured } = require('./security/requireAuth');
-const { requireAuthorization } = require('./security/requireAuthorization');
+const { requireAuthorization, requireLegacyOrganization } = require('./security/requireAuthorization');
 const { legacyRepositories } = require('./repositories/jsonRepository');
 const { createServices } = require('./services/resourceServices');
 const { SupabaseRestRepository } = require('./repositories/supabaseRestRepository');
@@ -39,15 +39,15 @@ function createApp({ services = createServices(legacyRepositories(config.dataDir
   app.get('/api/auth/me', requireAuth, anyMember, (req, res) => res.json({ authenticated: true, user: req.identity, membership: req.membership, requestId: req.requestId }));
 
   // Legacy JSON routes remain temporary, but are no longer reachable by authentication alone.
-  app.get('/api/deals', requireAuth, anyMember, (_req, res, next) => { try { res.json(services.deals.list()); } catch (e) { next(e); } });
-  app.post('/api/deals', requireAuth, canOperate, (req, res, next) => {
+  app.get('/api/deals', requireAuth, anyMember, requireLegacyOrganization, (_req, res, next) => { try { res.json(services.deals.list()); } catch (e) { next(e); } });
+  app.post('/api/deals', requireAuth, canOperate, requireLegacyOrganization, (req, res, next) => {
     try {
       const deal = services.deals.create(validateDeal(req.body));
       res.status(201).json(deal);
     } catch (e) { next(e); }
   });
-  app.get('/api/signals', requireAuth, anyMember, (_req, res, next) => { try { res.json(services.signals.list()); } catch (e) { next(e); } });
-  app.get('/api/posts', requireAuth, anyMember, (_req, res, next) => { try { res.json(services.posts.list()); } catch (e) { next(e); } });
+  app.get('/api/signals', requireAuth, anyMember, requireLegacyOrganization, (_req, res, next) => { try { res.json(services.signals.list()); } catch (e) { next(e); } });
+  app.get('/api/posts', requireAuth, anyMember, requireLegacyOrganization, (_req, res, next) => { try { res.json(services.posts.list()); } catch (e) { next(e); } });
 
   function liveRepo(req) {
     if (config.storageProvider !== 'supabase') throw new AppError('STORAGE_UNAVAILABLE','Production persistence is not enabled',503);
@@ -58,7 +58,7 @@ function createApp({ services = createServices(legacyRepositories(config.dataDir
     try {
       const repo=liveRepo(req);
       const rows=await repo.list('actions','organization_key=eq.'+encodeURIComponent(req.membership.organization_key)+'&status=eq.AWAITING_APPROVAL&select=id,decision_id,action_type,requested_action,permission_level,status,created_at&order=created_at.desc&limit=20');
-      res.json({items:rows,requestId:req.requestId});
+      res.json({items:rows,executionEnabled:false,executionReason:'Execution is paused until database approval and task completion are verified.',requestId:req.requestId});
     } catch(e){ next(e); }
   });
 

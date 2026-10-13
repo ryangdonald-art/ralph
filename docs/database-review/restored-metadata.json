@@ -1,0 +1,1956 @@
+{
+  "project": "qzvttvminqwhmxefbxbf",
+  "observed_date": "2026-10-13",
+  "status": "ACTIVE_HEALTHY",
+  "tables": [
+    {
+      "name": "public.entities",
+      "rls_enabled": true,
+      "rows": 0,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "gen_random_uuid()"
+        },
+        {
+          "name": "entity_type",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "entity_type <> ''::text"
+        },
+        {
+          "name": "name",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "name <> ''::text"
+        },
+        {
+          "name": "external_ref",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "source_system",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'RALPH'::text"
+        },
+        {
+          "name": "source_ref",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "provenance",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'{}'::jsonb"
+        },
+        {
+          "name": "created_by",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "organization_key",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'dealworx'::text",
+          "check": "length(TRIM(BOTH FROM organization_key)) > 0"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "evidence_entity_id_fkey",
+          "source_table": "public.evidence",
+          "source_columns": [
+            "entity_id"
+          ],
+          "target_table": "public.entities",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "entities_created_by_fkey",
+          "source_table": "public.entities",
+          "source_columns": [
+            "created_by"
+          ],
+          "target_table": "auth.users",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "signals_entity_id_fkey",
+          "source_table": "public.signals",
+          "source_columns": [
+            "entity_id"
+          ],
+          "target_table": "public.entities",
+          "target_columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.signals",
+      "rls_enabled": true,
+      "rows": 0,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "gen_random_uuid()"
+        },
+        {
+          "name": "entity_id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "signal_type",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "signal_type <> ''::text"
+        },
+        {
+          "name": "status",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'OPEN'::text",
+          "check": "status = ANY (ARRAY['OPEN'::text, 'ACKNOWLEDGED'::text, 'CLOSED'::text, 'DISMISSED'::text])"
+        },
+        {
+          "name": "severity",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'MATERIAL'::text",
+          "check": "severity = ANY (ARRAY['INFO'::text, 'MATERIAL'::text, 'HIGH'::text, 'CRITICAL'::text])"
+        },
+        {
+          "name": "summary",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "summary <> ''::text"
+        },
+        {
+          "name": "detected_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "source_system",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "source_ref",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "provenance",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'{}'::jsonb"
+        },
+        {
+          "name": "created_by",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "organization_key",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'dealworx'::text",
+          "check": "length(TRIM(BOTH FROM organization_key)) > 0"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "signals_entity_id_fkey",
+          "source_table": "public.signals",
+          "source_columns": [
+            "entity_id"
+          ],
+          "target_table": "public.entities",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "agent_runs_signal_id_fkey",
+          "source_table": "public.agent_runs",
+          "source_columns": [
+            "signal_id"
+          ],
+          "target_table": "public.signals",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "decisions_signal_id_fkey",
+          "source_table": "public.decisions",
+          "source_columns": [
+            "signal_id"
+          ],
+          "target_table": "public.signals",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "investigations_signal_id_fkey",
+          "source_table": "public.investigations",
+          "source_columns": [
+            "signal_id"
+          ],
+          "target_table": "public.signals",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "evidence_signal_id_fkey",
+          "source_table": "public.evidence",
+          "source_columns": [
+            "signal_id"
+          ],
+          "target_table": "public.signals",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "signals_created_by_fkey",
+          "source_table": "public.signals",
+          "source_columns": [
+            "created_by"
+          ],
+          "target_table": "auth.users",
+          "target_columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.evidence",
+      "rls_enabled": true,
+      "rows": 0,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "gen_random_uuid()"
+        },
+        {
+          "name": "signal_id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "entity_id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "evidence_type",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "evidence_type <> ''::text"
+        },
+        {
+          "name": "source_system",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "source_ref",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "observed_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "payload",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "content_hash",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "provenance",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'{}'::jsonb"
+        },
+        {
+          "name": "created_by",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "organization_key",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'dealworx'::text",
+          "check": "length(TRIM(BOTH FROM organization_key)) > 0"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "evidence_signal_id_fkey",
+          "source_table": "public.evidence",
+          "source_columns": [
+            "signal_id"
+          ],
+          "target_table": "public.signals",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "evidence_entity_id_fkey",
+          "source_table": "public.evidence",
+          "source_columns": [
+            "entity_id"
+          ],
+          "target_table": "public.entities",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "evidence_created_by_fkey",
+          "source_table": "public.evidence",
+          "source_columns": [
+            "created_by"
+          ],
+          "target_table": "auth.users",
+          "target_columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.investigations",
+      "rls_enabled": true,
+      "rows": 0,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "gen_random_uuid()"
+        },
+        {
+          "name": "signal_id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "status",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'OPEN'::text",
+          "check": "status = ANY (ARRAY['OPEN'::text, 'INSUFFICIENT_EVIDENCE'::text, 'COMPLETE'::text, 'CANCELLED'::text])"
+        },
+        {
+          "name": "anomaly",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "baseline",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "materiality",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "supporting_evidence",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'[]'::jsonb"
+        },
+        {
+          "name": "contradictory_evidence",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'[]'::jsonb"
+        },
+        {
+          "name": "hypotheses",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'[]'::jsonb"
+        },
+        {
+          "name": "missing_information",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'[]'::jsonb"
+        },
+        {
+          "name": "economic_exposure",
+          "data_type": "numeric",
+          "format": "numeric",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "currency",
+          "data_type": "character",
+          "format": "bpchar",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'ZAR'::bpchar"
+        },
+        {
+          "name": "confidence",
+          "data_type": "numeric",
+          "format": "numeric",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "check": "confidence IS NULL OR confidence >= 0::numeric AND confidence <= 1::numeric"
+        },
+        {
+          "name": "provenance",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'{}'::jsonb"
+        },
+        {
+          "name": "created_by",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "organization_key",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'dealworx'::text",
+          "check": "length(TRIM(BOTH FROM organization_key)) > 0"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "investigations_created_by_fkey",
+          "source_table": "public.investigations",
+          "source_columns": [
+            "created_by"
+          ],
+          "target_table": "auth.users",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "agent_runs_investigation_id_fkey",
+          "source_table": "public.agent_runs",
+          "source_columns": [
+            "investigation_id"
+          ],
+          "target_table": "public.investigations",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "decisions_investigation_id_fkey",
+          "source_table": "public.decisions",
+          "source_columns": [
+            "investigation_id"
+          ],
+          "target_table": "public.investigations",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "investigations_signal_id_fkey",
+          "source_table": "public.investigations",
+          "source_columns": [
+            "signal_id"
+          ],
+          "target_table": "public.signals",
+          "target_columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.decisions",
+      "rls_enabled": true,
+      "rows": 0,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "gen_random_uuid()"
+        },
+        {
+          "name": "investigation_id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "signal_id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "output_type",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "output_type = ANY (ARRAY['ACTION'::text, 'DECISION'::text, 'ALERT'::text, 'TASK'::text, 'FOLLOW-UP'::text, 'ESCALATION'::text, 'KILL'::text])"
+        },
+        {
+          "name": "status",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'PROPOSED'::text",
+          "check": "status = ANY (ARRAY['PROPOSED'::text, 'APPROVED'::text, 'REJECTED'::text, 'SUPERSEDED'::text, 'CLOSED'::text])"
+        },
+        {
+          "name": "summary",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "summary <> ''::text"
+        },
+        {
+          "name": "rationale",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "confidence",
+          "data_type": "numeric",
+          "format": "numeric",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "check": "confidence IS NULL OR confidence >= 0::numeric AND confidence <= 1::numeric"
+        },
+        {
+          "name": "provenance",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'{}'::jsonb"
+        },
+        {
+          "name": "created_by",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "organization_key",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'dealworx'::text",
+          "check": "length(TRIM(BOTH FROM organization_key)) > 0"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "actions_decision_id_fkey",
+          "source_table": "public.actions",
+          "source_columns": [
+            "decision_id"
+          ],
+          "target_table": "public.decisions",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "decisions_signal_id_fkey",
+          "source_table": "public.decisions",
+          "source_columns": [
+            "signal_id"
+          ],
+          "target_table": "public.signals",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "decisions_created_by_fkey",
+          "source_table": "public.decisions",
+          "source_columns": [
+            "created_by"
+          ],
+          "target_table": "auth.users",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "agent_runs_decision_id_fkey",
+          "source_table": "public.agent_runs",
+          "source_columns": [
+            "decision_id"
+          ],
+          "target_table": "public.decisions",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "outcomes_decision_id_fkey",
+          "source_table": "public.outcomes",
+          "source_columns": [
+            "decision_id"
+          ],
+          "target_table": "public.decisions",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "decisions_investigation_id_fkey",
+          "source_table": "public.decisions",
+          "source_columns": [
+            "investigation_id"
+          ],
+          "target_table": "public.investigations",
+          "target_columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.actions",
+      "rls_enabled": true,
+      "rows": 0,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "gen_random_uuid()"
+        },
+        {
+          "name": "decision_id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "action_type",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "action_type <> ''::text"
+        },
+        {
+          "name": "requested_action",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "permission_level",
+          "data_type": "smallint",
+          "format": "int2",
+          "options": [
+            "updatable"
+          ],
+          "check": "permission_level >= 0 AND permission_level <= 3"
+        },
+        {
+          "name": "status",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'PENDING'::text",
+          "check": "status = ANY (ARRAY['PENDING'::text, 'AWAITING_APPROVAL'::text, 'APPROVED'::text, 'REJECTED'::text, 'EXECUTING'::text, 'EXECUTED'::text, 'FAILED'::text, 'CANCELLED'::text])"
+        },
+        {
+          "name": "idempotency_key",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable",
+            "unique"
+          ]
+        },
+        {
+          "name": "execution_result",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "error_code",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "created_by",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "organization_key",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'dealworx'::text",
+          "check": "length(TRIM(BOTH FROM organization_key)) > 0"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "actions_decision_id_fkey",
+          "source_table": "public.actions",
+          "source_columns": [
+            "decision_id"
+          ],
+          "target_table": "public.decisions",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "approvals_action_id_fkey",
+          "source_table": "public.approvals",
+          "source_columns": [
+            "action_id"
+          ],
+          "target_table": "public.actions",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "outcomes_action_id_fkey",
+          "source_table": "public.outcomes",
+          "source_columns": [
+            "action_id"
+          ],
+          "target_table": "public.actions",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "actions_created_by_fkey",
+          "source_table": "public.actions",
+          "source_columns": [
+            "created_by"
+          ],
+          "target_table": "auth.users",
+          "target_columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.outcomes",
+      "rls_enabled": true,
+      "rows": 0,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "gen_random_uuid()"
+        },
+        {
+          "name": "action_id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "decision_id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "outcome_type",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "outcome_type <> ''::text"
+        },
+        {
+          "name": "summary",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "summary <> ''::text"
+        },
+        {
+          "name": "economic_amount",
+          "data_type": "numeric",
+          "format": "numeric",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "check": "economic_amount IS NULL OR economic_amount >= 0::numeric"
+        },
+        {
+          "name": "currency",
+          "data_type": "character",
+          "format": "bpchar",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'ZAR'::bpchar"
+        },
+        {
+          "name": "economic_state",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "check": "economic_state IS NULL OR (economic_state = ANY (ARRAY['ESTIMATED'::text, 'VERIFIED'::text, 'REALIZED'::text]))"
+        },
+        {
+          "name": "evidence_refs",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'[]'::jsonb"
+        },
+        {
+          "name": "measured_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "provenance",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'{}'::jsonb"
+        },
+        {
+          "name": "created_by",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "organization_key",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'dealworx'::text",
+          "check": "length(TRIM(BOTH FROM organization_key)) > 0"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "outcomes_created_by_fkey",
+          "source_table": "public.outcomes",
+          "source_columns": [
+            "created_by"
+          ],
+          "target_table": "auth.users",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "outcomes_decision_id_fkey",
+          "source_table": "public.outcomes",
+          "source_columns": [
+            "decision_id"
+          ],
+          "target_table": "public.decisions",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "outcomes_action_id_fkey",
+          "source_table": "public.outcomes",
+          "source_columns": [
+            "action_id"
+          ],
+          "target_table": "public.actions",
+          "target_columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.agent_runs",
+      "rls_enabled": true,
+      "rows": 0,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "gen_random_uuid()"
+        },
+        {
+          "name": "agent",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "agent = ANY (ARRAY['RALPH'::text, 'SHERLOCK'::text, 'RAT'::text, 'EXECUTION'::text])"
+        },
+        {
+          "name": "provider",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "model",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "signal_id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "investigation_id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "decision_id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "input_refs",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'[]'::jsonb"
+        },
+        {
+          "name": "context_refs",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'[]'::jsonb"
+        },
+        {
+          "name": "tools",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'[]'::jsonb"
+        },
+        {
+          "name": "output",
+          "data_type": "jsonb",
+          "format": "jsonb",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "confidence",
+          "data_type": "numeric",
+          "format": "numeric",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "check": "confidence IS NULL OR confidence >= 0::numeric AND confidence <= 1::numeric"
+        },
+        {
+          "name": "duration_ms",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "check": "duration_ms IS NULL OR duration_ms >= 0"
+        },
+        {
+          "name": "input_tokens",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "check": "input_tokens IS NULL OR input_tokens >= 0"
+        },
+        {
+          "name": "output_tokens",
+          "data_type": "integer",
+          "format": "int4",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "check": "output_tokens IS NULL OR output_tokens >= 0"
+        },
+        {
+          "name": "cost_amount",
+          "data_type": "numeric",
+          "format": "numeric",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "check": "cost_amount IS NULL OR cost_amount >= 0::numeric"
+        },
+        {
+          "name": "cost_currency",
+          "data_type": "character",
+          "format": "bpchar",
+          "options": [
+            "nullable",
+            "updatable"
+          ],
+          "default_value": "'USD'::bpchar"
+        },
+        {
+          "name": "error_code",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "error_message",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "started_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "completed_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "created_by",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "organization_key",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'dealworx'::text",
+          "check": "length(TRIM(BOTH FROM organization_key)) > 0"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "agent_runs_decision_id_fkey",
+          "source_table": "public.agent_runs",
+          "source_columns": [
+            "decision_id"
+          ],
+          "target_table": "public.decisions",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "agent_runs_signal_id_fkey",
+          "source_table": "public.agent_runs",
+          "source_columns": [
+            "signal_id"
+          ],
+          "target_table": "public.signals",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "agent_runs_created_by_fkey",
+          "source_table": "public.agent_runs",
+          "source_columns": [
+            "created_by"
+          ],
+          "target_table": "auth.users",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "agent_runs_investigation_id_fkey",
+          "source_table": "public.agent_runs",
+          "source_columns": [
+            "investigation_id"
+          ],
+          "target_table": "public.investigations",
+          "target_columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.approvals",
+      "rls_enabled": true,
+      "rows": 0,
+      "columns": [
+        {
+          "name": "id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "gen_random_uuid()"
+        },
+        {
+          "name": "action_id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "status",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'PENDING'::text",
+          "check": "status = ANY (ARRAY['PENDING'::text, 'APPROVED'::text, 'REJECTED'::text, 'REVOKED'::text])"
+        },
+        {
+          "name": "approver_id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "approval_timestamp",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "notes",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "nullable",
+            "updatable"
+          ]
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "organization_key",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'dealworx'::text",
+          "check": "length(TRIM(BOTH FROM organization_key)) > 0"
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "approvals_action_id_fkey",
+          "source_table": "public.approvals",
+          "source_columns": [
+            "action_id"
+          ],
+          "target_table": "public.actions",
+          "target_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "approvals_approver_id_fkey",
+          "source_table": "public.approvals",
+          "source_columns": [
+            "approver_id"
+          ],
+          "target_table": "auth.users",
+          "target_columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.app_members",
+      "rls_enabled": true,
+      "rows": 0,
+      "columns": [
+        {
+          "name": "user_id",
+          "data_type": "uuid",
+          "format": "uuid",
+          "options": [
+            "updatable"
+          ]
+        },
+        {
+          "name": "organization_key",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "'dealworx'::text",
+          "check": "length(TRIM(BOTH FROM organization_key)) > 0"
+        },
+        {
+          "name": "role",
+          "data_type": "text",
+          "format": "text",
+          "options": [
+            "updatable"
+          ],
+          "check": "role = ANY (ARRAY['ADMIN'::text, 'OPERATOR'::text, 'VIEWER'::text])"
+        },
+        {
+          "name": "active",
+          "data_type": "boolean",
+          "format": "bool",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "true"
+        },
+        {
+          "name": "created_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        },
+        {
+          "name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "format": "timestamptz",
+          "options": [
+            "updatable"
+          ],
+          "default_value": "now()"
+        }
+      ],
+      "primary_keys": [
+        "user_id"
+      ],
+      "foreign_key_constraints": [
+        {
+          "name": "app_members_user_id_fkey",
+          "source_table": "public.app_members",
+          "source_columns": [
+            "user_id"
+          ],
+          "target_table": "auth.users",
+          "target_columns": [
+            "id"
+          ]
+        }
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "tablename": "actions",
+      "policyname": "member_select_actions",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = actions.organization_key))))",
+      "with_check": null
+    },
+    {
+      "tablename": "actions",
+      "policyname": "operator_admin_insert_actions",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = actions.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))"
+    },
+    {
+      "tablename": "actions",
+      "policyname": "operator_admin_update_actions",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = actions.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = actions.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))"
+    },
+    {
+      "tablename": "agent_runs",
+      "policyname": "member_select_agent_runs",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = agent_runs.organization_key))))",
+      "with_check": null
+    },
+    {
+      "tablename": "app_members",
+      "policyname": "app_members_select_self",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((( SELECT auth.uid() AS uid) = user_id) AND (active = true))",
+      "with_check": null
+    },
+    {
+      "tablename": "approvals",
+      "policyname": "admin_insert_approvals",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = approvals.organization_key) AND (m.role = 'ADMIN'::text)))) AND ((approver_id IS NULL) OR (approver_id = ( SELECT auth.uid() AS uid))))"
+    },
+    {
+      "tablename": "approvals",
+      "policyname": "member_select_approvals",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = approvals.organization_key))))",
+      "with_check": null
+    },
+    {
+      "tablename": "decisions",
+      "policyname": "member_select_decisions",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = decisions.organization_key))))",
+      "with_check": null
+    },
+    {
+      "tablename": "decisions",
+      "policyname": "operator_admin_insert_decisions",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = decisions.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))"
+    },
+    {
+      "tablename": "decisions",
+      "policyname": "operator_admin_update_decisions",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = decisions.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = decisions.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))"
+    },
+    {
+      "tablename": "entities",
+      "policyname": "member_select_entities",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = entities.organization_key))))",
+      "with_check": null
+    },
+    {
+      "tablename": "entities",
+      "policyname": "operator_admin_delete_entities",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = entities.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))",
+      "with_check": null
+    },
+    {
+      "tablename": "entities",
+      "policyname": "operator_admin_insert_entities",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = entities.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))"
+    },
+    {
+      "tablename": "entities",
+      "policyname": "operator_admin_update_entities",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = entities.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = entities.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))"
+    },
+    {
+      "tablename": "evidence",
+      "policyname": "member_select_evidence",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = evidence.organization_key))))",
+      "with_check": null
+    },
+    {
+      "tablename": "evidence",
+      "policyname": "operator_admin_insert_evidence",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = evidence.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))"
+    },
+    {
+      "tablename": "investigations",
+      "policyname": "member_select_investigations",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = investigations.organization_key))))",
+      "with_check": null
+    },
+    {
+      "tablename": "investigations",
+      "policyname": "operator_admin_delete_investigations",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = investigations.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))",
+      "with_check": null
+    },
+    {
+      "tablename": "investigations",
+      "policyname": "operator_admin_insert_investigations",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = investigations.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))"
+    },
+    {
+      "tablename": "investigations",
+      "policyname": "operator_admin_update_investigations",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = investigations.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = investigations.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))"
+    },
+    {
+      "tablename": "outcomes",
+      "policyname": "member_select_outcomes",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = outcomes.organization_key))))",
+      "with_check": null
+    },
+    {
+      "tablename": "outcomes",
+      "policyname": "operator_admin_delete_outcomes",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = outcomes.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))",
+      "with_check": null
+    },
+    {
+      "tablename": "outcomes",
+      "policyname": "operator_admin_insert_outcomes",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = outcomes.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))"
+    },
+    {
+      "tablename": "outcomes",
+      "policyname": "operator_admin_update_outcomes",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = outcomes.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = outcomes.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))"
+    },
+    {
+      "tablename": "signals",
+      "policyname": "member_select_signals",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = signals.organization_key))))",
+      "with_check": null
+    },
+    {
+      "tablename": "signals",
+      "policyname": "operator_admin_insert_signals",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "(EXISTS ( SELECT 1\n   FROM app_members m\n  WHERE ((m.user_id = ( SELECT auth.uid() AS uid)) AND m.active AND (m.organization_key = signals.organization_key) AND (m.role = ANY (ARRAY['OPERATOR'::text, 'ADMIN'::text])))))"
+    }
+  ],
+  "functions": [],
+  "note": "Metadata only; table row estimates are not exact counts. No auth identities or tokens included."
+}

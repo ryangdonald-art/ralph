@@ -6,6 +6,11 @@ RALPH 2.0 is being developed as an executive operating instrument: detect what n
 
 ## Current development boundary
 
+- Start substantive work with `AGENTS.md` and `docs/OPERATING_RECORD.md`. Scoped rule retrieval is documented in `docs/memory/README.md`; it is not automatic ChatGPT memory.
+- A locally tested transactional synthetic workflow candidate is in `docs/database-review/TRANSACTIONAL_CANDIDATE.md`. It remains unapplied, with real authentication, integration and concurrent-session tests outstanding.
+- Upgrade review branch: `ralph-upgrade-2026-10-13`; see `docs/UPGRADE_STATUS_2026-10-13.md` for tested changes and remaining gates.
+- Runtime check on 13 October: database restored ACTIVE_HEALTHY with ten tables and six recovered migrations. Full authenticated operation is not verified; preparation and execution remain paused.
+- Legacy non-atomic execution is deliberately disabled in this upgrade; offline synthetic proof is available with `npm run demo:loop -- /tmp/ralph-proof.json`.
 - Working branch: `ralph-2-foundation`
 - PR #1 is a development checkpoint and must not be merged without explicit Ryan authorization.
 - V1 autonomy is capped at Level 3 with human approval.

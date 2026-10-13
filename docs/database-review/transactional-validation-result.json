@@ -1,0 +1,51 @@
+{
+  "status": "PASS",
+  "checks": 31,
+  "results": [
+    "Injected late preparation failure rolls back all six prior records/receipts.",
+    "Exact threshold 25000 rejected and 25000.01 accepted, matching detector.",
+    "Deterministic reviewers have distinct evidence, challenge and decision outputs.",
+    "Identical preparation replay returns original IDs.",
+    "Conflicting idempotency payload rejected.",
+    "Operator cannot approve.",
+    "Direct client preparation writes denied.",
+    "Cross-organization action approval denied.",
+    "Viewer command denied.",
+    "Anonymous command denied.",
+    "Missing subject denied.",
+    "Task insertion failure rolls back human approval and action transition.",
+    "Admin approval creates one durable task; replay is stable.",
+    "New key cannot reapprove existing action.",
+    "Unassigned admin cannot complete operator task.",
+    "Missing observation provenance rejected.",
+    "Lesson proposal failure rolls back outcome and task completion.",
+    "Assigned operator completion records observed synthetic outcome; replay stable.",
+    "Repeated completion under new key rejected.",
+    "Unreviewed lesson never enters later preparation context.",
+    "Self-review denied even after proposer becomes admin.",
+    "Separate admin review records reason and stable replay.",
+    "Direct lesson mutation denied.",
+    "Task and lesson reads tenant-isolated.",
+    "Reopened database retrieves reviewed lesson and changes later decision instruction/context.",
+    "Retrieved reviewed lesson causes later task to reject missing observation timestamp.",
+    "Future observation timestamp rejected.",
+    "Malformed observation timestamp rejected.",
+    "Later task succeeds with valid observed timestamp: lesson changes enforced completion requirements.",
+    "Revoked membership blocks even identical command replay.",
+    "Final cardinality: exactly two tasks, approvals, outcomes and lesson proposals across two completed cycles despite replay attempts."
+  ],
+  "finalCounts": {
+    "actions": 4,
+    "tasks": 2,
+    "approvals": 2,
+    "outcomes": 2,
+    "lessons": 2
+  },
+  "limitations": [
+    "Local PGlite emulates auth.uid and auth.users; pgcrypto extension omitted in favour of native gen_random_uuid.",
+    "No JWT/PostgREST, real owner login, live migration or external side effect.",
+    "Single-engine serialized tests do not prove concurrent multi-session lock behavior.",
+    "Synthetic numeric recheck is a human-supplied observation, not independent bank verification.",
+    "Deterministic reviewer templates and reviewed procedural retrieval, not LLM reasoning or general learning."
+  ]
+}

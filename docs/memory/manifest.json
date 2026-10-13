@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-10-13",
+  "recoveredRulesSha256": "ef694ab01854312f87a985a0e77ac60835dc0048fd80bd5da10a32186427b01d",
+  "sourceStatus": "94 INTERPRETED RECORDS PRESERVED; TWO STANDING ORIGINALS REREAD; HISTORY INCOMPLETE",
+  "sources": [
+    {
+      "ref": "recovered-register",
+      "file": "RALPH_Rules_Register_2026-10-12.md",
+      "sha256": "44f68bf9e596aeb793fb022aebcdd582b5fd6a2c054e261eaabbde68e38db718",
+      "status": "RECOVERED_INTERPRETED_REGISTER"
+    },
+    {
+      "ref": "standing-beast-mode",
+      "file": "RALPH_Permanent_Beast_Mode_2026-10-01.md",
+      "asOf": "2026-10-01",
+      "status": "ORIGINAL_REREAD_BY_COORDINATOR_2026-10-13",
+      "scope": "all"
+    },
+    {
+      "ref": "standing-linkedin",
+      "file": "LinkedIn_Engine_Locked_Operating_Instruction_2026-10-04.md",
+      "asOf": "2026-10-04",
+      "version": 1,
+      "status": "ORIGINAL_REREAD_BY_COORDINATOR_2026-10-13",
+      "scope": "linkedin"
+    },
+    {
+      "ref": "current-directive",
+      "source": "Owner master reconstruction directive in current conversation",
+      "effectiveDate": "2026-10-13",
+      "status": "EXPLICIT_CURRENT_OWNER_INSTRUCTION; OPERATIONAL TEXT IS NEW INTERPRETATION"
+    },
+    {
+      "ref": "operating-specification",
+      "file": "RALPH_Operating_Specification_2026-10-13.md",
+      "status": "CONSOLIDATED_SPECIFICATION_NOT_ORIGINAL_HISTORY"
+    }
+  ],
+  "missingOriginals": [
+    "PETALS complete original definition",
+    "TOP 40 and 40s complete original definitions",
+    "Standalone historical RAT/NONO/Supreme/Constitution prompt exports not recovered"
+  ],
+  "privacy": "Governance register only; no client records, user identity credentials, business financial actuals or private model assumptions"
+}
