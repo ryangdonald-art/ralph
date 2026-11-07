@@ -1,0 +1,11 @@
+'use strict';
+const test=require('node:test');const assert=require('node:assert/strict');
+const {planProvider,PROVIDERS}=require('../src/intelligence/provider-router');
+test('four provider definitions exist',()=>assert.deepEqual(Object.keys(PROVIDERS).sort(),['anthropic','meta','openai','xai']));
+test('no approved provider blocks',()=>assert.equal(planProvider({role:'RAT',available:['anthropic'],approved:[]}).status,'blocked'));
+test('approved unavailable provider blocks',()=>assert.equal(planProvider({role:'RAT',available:['openai'],approved:['anthropic']}).status,'blocked'));
+test('RAT chooses available approved Claude',()=>assert.equal(planProvider({role:'RAT',available:['anthropic','openai'],approved:['anthropic']}).provider,'anthropic'));
+test('SHERLOCK can select xAI as fallback',()=>assert.equal(planProvider({role:'SHERLOCK',available:['xai'],approved:['xai']}).provider,'xai'));
+test('unknown role rejected',()=>assert.throws(()=>planProvider({role:'unknown'})));
+test('invalid provider list rejected',()=>assert.throws(()=>planProvider({role:'RAT',available:'openai'})));
+test('selected provider is candidate not connected',()=>assert.equal(planProvider({role:'RENEE',available:['openai'],approved:['openai']}).status,'candidate'));
