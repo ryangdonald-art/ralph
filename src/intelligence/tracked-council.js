@@ -25,7 +25,8 @@ function createTrackedCouncil({runner,ledger,verifyProviderRun,clock=()=>new Dat
   if(!ledger||typeof ledger.append!=='function')throw new Error('Ledger required');
   if(typeof verifyProviderRun!=='function')throw new Error('Independent provider verifier required');
   if(typeof clock!=='function'||typeof idFactory!=='function')throw new Error('Clock and ID factory required');
-  return {async evaluate({kind,brief,configurations,claims,findings,risk='ordinary'}={}){
+  return {async evaluate({tenantId,kind,brief,configurations,claims,findings,risk='ordinary'}={}){
+    if(typeof tenantId!=='string'||!tenantId.trim())throw new Error('Tenant ID required');
     if(typeof brief!=='string'||!brief.trim())throw new Error('Brief required');
     if(!configurations||typeof configurations!=='object'||Array.isArray(configurations))throw new Error('Configurations required');
     const selected=route(kind,risk);
@@ -48,7 +49,7 @@ function createTrackedCouncil({runner,ledger,verifyProviderRun,clock=()=>new Dat
           }else{status='failed';errorCode='RUN_FAILED';}
         }catch(_){status='failed';errorCode='RUN_FAILED';}
       }
-      const event=Object.freeze({runId,role,kind,configurationVersion:typeof version==='string'?version:null,startedAt,completedAt:clock(),status,providerExecutionVerified,errorCode});
+      const event=Object.freeze({tenantId,runId,role,kind,configurationVersion:typeof version==='string'?version:null,startedAt,completedAt:clock(),status,providerExecutionVerified,errorCode});
       // Failure to record a run must stop evaluation; never present a successful unrecorded review.
       ledger.append(event);
       runs.push(event);
