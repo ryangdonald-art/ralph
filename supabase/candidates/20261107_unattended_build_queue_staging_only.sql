@@ -19,6 +19,12 @@ create table if not exists public.ralph_build_tasks (
  )
 );
 create index if not exists ralph_build_tasks_claim_idx on public.ralph_build_tasks(tenant_id,state,priority,created_at);
+create table if not exists public.ralph_build_task_dependencies (
+ task_id uuid not null references public.ralph_build_tasks(id),
+ depends_on_task_id uuid not null references public.ralph_build_tasks(id),
+ primary key(task_id,depends_on_task_id),
+ check (task_id <> depends_on_task_id)
+);
 create table if not exists public.ralph_build_task_events (
  id bigint generated always as identity primary key,
  task_id uuid not null references public.ralph_build_tasks(id),
@@ -31,9 +37,11 @@ create table if not exists public.ralph_build_task_events (
 create index if not exists ralph_build_task_events_tenant_idx on public.ralph_build_task_events(tenant_id,task_id,recorded_at);
 alter table public.ralph_build_tasks enable row level security;
 alter table public.ralph_build_task_events enable row level security;
+alter table public.ralph_build_task_dependencies enable row level security;
 -- Default deny: deliberately create NO policies. Direct clients cannot read/write.
 revoke all on public.ralph_build_tasks from anon, authenticated;
 revoke all on public.ralph_build_task_events from anon, authenticated;
+revoke all on public.ralph_build_task_dependencies from anon, authenticated;
 -- No SECURITY DEFINER worker functions in this candidate.
 -- Claim/complete must later be implemented with an audited transactional server
 -- function using authenticated tenant/worker identity and atomic fencing checks.
