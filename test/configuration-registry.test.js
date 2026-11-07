@@ -1,0 +1,11 @@
+'use strict';
+const test=require('node:test');const assert=require('node:assert/strict');
+const {createConfigurationRegistry}=require('../src/intelligence/configuration-registry');
+test('unrecovered is default for all roles',()=>{const r=createConfigurationRegistry();assert(r.list().length>=14);assert(r.list().every(x=>x.status==='unrecovered'))});
+test('documented instructions do not count as connected',()=>{const r=createConfigurationRegistry([{role:'RENEE',status:'documented',version:'v1',instructionsRef:'file'}]);assert.equal(r.get('RENEE').status,'documented')});
+test('configured requires instructions and provider',()=>assert.throws(()=>createConfigurationRegistry([{role:'RENEE',status:'configured',version:'v1'}])));
+test('provider verified requires independent proof metadata',()=>assert.throws(()=>createConfigurationRegistry([{role:'RAT',status:'provider_verified',version:'v1',provider:'test'}])));
+test('provider verified metadata is recorded, not automatically trusted',()=>{const r=createConfigurationRegistry([{role:'RAT',status:'provider_verified',version:'v1',provider:'test',providerModel:'model',verificationRunId:'run'}]);assert.equal(r.get('RAT').verificationRunId,'run')});
+test('unknown role rejected',()=>assert.throws(()=>createConfigurationRegistry([{role:'MAGIC',status:'documented',version:'v1'}])));
+test('unknown status rejected',()=>assert.throws(()=>createConfigurationRegistry([{role:'RAT',status:'deployed_everywhere',version:'v1'}])));
+test('conflicting version status rejected',()=>assert.throws(()=>createConfigurationRegistry([{role:'RAT',status:'documented',version:'v1'},{role:'RAT',status:'configured',version:'v1',provider:'test',instructionsRef:'file'}])));
