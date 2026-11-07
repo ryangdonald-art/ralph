@@ -9,7 +9,7 @@ function createTaskQueue({clock=()=>Date.now(),leaseMs=300000,maxAttempts=3}={})
   enqueue({id,tenantId,kind,priority=5,dependencies=[]}={}){
    if(![id,tenantId,kind].every(x=>typeof x==='string'&&x.trim())||!Number.isInteger(priority)||priority<0||priority>10||!Array.isArray(dependencies)||dependencies.some(x=>typeof x!=='string'||!x.trim())||dependencies.includes(id))throw Error('Invalid task');
    if(tasks.has(id))throw Error('Duplicate task ID');
-   const t={id,tenantId,kind,priority,dependencies:[...dependencies],status:'queued',attempts:0,leaseOwner:null,leaseUntil:null};
+   const t={id,tenantId,kind,priority,dependencies:[...dependencies],status:'queued',attempts:0,leaseOwner:null,leaseUntil:null,leaseToken:0};
    tasks.set(id,t);return snapshot(t);
   },
   claim({workerId,tenantId}={}){
@@ -18,11 +18,11 @@ function createTaskQueue({clock=()=>Date.now(),leaseMs=300000,maxAttempts=3}={})
    const eligible=[...tasks.values()].filter(t=>t.tenantId===tenantId&&(t.status==='queued'||(t.status==='leased'&&t.leaseUntil<=now))&&t.attempts<maxAttempts&&t.dependencies.every(id=>tasks.get(id)?.tenantId===tenantId&&tasks.get(id).status==='completed'));
    eligible.sort((a,b)=>a.priority-b.priority||a.id.localeCompare(b.id));
    const t=eligible[0];if(!t)return null;
-   t.status='leased';t.attempts++;t.leaseOwner=workerId;t.leaseUntil=now+leaseMs;return snapshot(t);
+   t.status='leased';t.attempts++;t.leaseToken++;t.leaseOwner=workerId;t.leaseUntil=now+leaseMs;return snapshot(t);
   },
-  finish({id,workerId,status}={}){
+  finish({id,workerId,leaseToken,status}={}){
    const t=tasks.get(id);
-   if(!t||t.status!=='leased'||t.leaseOwner!==workerId||t.leaseUntil<=clock()||!['completed','failed','blocked'].includes(status))throw Error('Invalid lease completion');
+   if(!t||t.status!=='leased'||t.leaseOwner!==workerId||t.leaseToken!==leaseToken||t.leaseUntil<=clock()||!['completed','failed','blocked'].includes(status))throw Error('Invalid lease completion');
    t.status=status;t.leaseOwner=null;t.leaseUntil=null;return snapshot(t);
   },
   list(tenantId){if(typeof tenantId!=='string'||!tenantId.trim())throw Error('Tenant required');return [...tasks.values()].filter(t=>t.tenantId===tenantId).map(snapshot);}
