@@ -1,0 +1,15 @@
+'use strict';
+const test=require('node:test');const assert=require('node:assert/strict');const {createRunner}=require('../src/intelligence/specialist-runner');
+const mk=(execute)=>createRunner({execute,idFactory:()=> 'run-1',clock:()=> '2026-11-07T16:00:00Z'});
+const req={kind:'editorial',role:'RENEE',brief:'Investigate',configurationVersion:'v1'};
+test('successful adapter run is not falsely certified independent',async()=>{const r=await mk(async x=>({role:x.role,summary:'Research pending',evidenceRefs:[]})).run(req);assert.equal(r.status,'completed');assert.equal(r.independent,false);assert.equal(r.providerExecutionVerified,false);assert.equal(r.runId,'run-1')});
+test('adapter receives scoped brief',async()=>{let arg;await mk(async x=>{arg=x;return {role:x.role,summary:'ok',evidenceRefs:[]}}).run(req);assert.equal(arg.configurationVersion,'v1');assert.equal(arg.kind,'editorial')});
+test('unapproved role rejected',async()=>await assert.rejects(()=>mk(async()=>({})).run({...req,role:'BOB'})));
+test('missing config rejected',async()=>await assert.rejects(()=>mk(async()=>({})).run({...req,configurationVersion:''})));
+test('missing brief rejected',async()=>await assert.rejects(()=>mk(async()=>({})).run({...req,brief:''})));
+test('missing adapter rejected',()=>assert.throws(()=>createRunner({idFactory:()=> 'id'})));
+test('missing id generator rejected',()=>assert.throws(()=>createRunner({execute:async()=>({})})));
+test('adapter failure safely reported',async()=>{const r=await mk(async()=>{throw Error('secret');}).run(req);assert.equal(r.status,'failed');assert.equal(r.errorCode,'EXECUTION_FAILED');assert.equal(JSON.stringify(r).includes('secret'),false)});
+test('wrong role result fails closed',async()=>assert.equal((await mk(async()=>({role:'RAT',summary:'ok',evidenceRefs:[]})).run(req)).status,'failed'));
+test('malformed evidence fails closed',async()=>assert.equal((await mk(async()=>({role:'RENEE',summary:'ok',evidenceRefs:['']})).run(req)).status,'failed'));
+test('material visual RAT routing allowed',async()=>assert.equal((await mk(async()=>({role:'RAT',summary:'ok',evidenceRefs:[]})).run({...req,kind:'visual',role:'RAT'})).status,'completed'));
