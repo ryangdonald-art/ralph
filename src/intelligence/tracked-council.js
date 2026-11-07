@@ -29,6 +29,8 @@ function createTrackedCouncil({runner,ledger,verifyProviderRun,clock=()=>new Dat
     if(typeof brief!=='string'||!brief.trim())throw new Error('Brief required');
     if(!configurations||typeof configurations!=='object'||Array.isArray(configurations))throw new Error('Configurations required');
     const selected=route(kind,risk);
+    // Validate claims and objections before any specialist execution side effects.
+    const gate=evaluateCouncilPackage({claims,findings,attestations:[]});
     const runs=[];
     for(const role of selected){
       const runId=idFactory();
@@ -51,7 +53,6 @@ function createTrackedCouncil({runner,ledger,verifyProviderRun,clock=()=>new Dat
       ledger.append(event);
       runs.push(event);
     }
-    const gate=evaluateCouncilPackage({claims,findings,attestations:[]});
     const complete=runs.length===selected.length&&runs.every(r=>r.status==='completed'&&r.providerExecutionVerified);
     return Object.freeze({decision:complete?gate.decision:'BLOCKED',approvalGranted:false,reason:complete?gate.reason:'SPECIALIST_INCOMPLETE',runs,gate});
   }};
