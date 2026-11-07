@@ -1,0 +1,16 @@
+'use strict';
+const test=require('node:test');const assert=require('node:assert/strict');
+const {evaluateCouncilPackage}=require('../src/intelligence/council-evidence-gate');
+const verified={text:'Reported figure',status:'verified',sources:[{id:'filing-1',title:'Filing',supports:true,independent:true}]};
+const resolved={role:'RAT',severity:'minor',disposition:'resolved'};
+const base=()=>({claims:[verified],findings:[resolved],attestations:[]});
+test('supported evidence and resolved findings ready for human review, not approval',()=>{const r=evaluateCouncilPackage(base());assert.equal(r.decision,'REVIEW_READY');assert.equal(r.approvalGranted,false)});
+test('unsupported verified claim blocks',()=>{const p=base();p.claims=[{text:'Unverified',status:'verified',sources:[]}];assert.equal(evaluateCouncilPackage(p).decision,'BLOCKED')});
+test('critical unresolved Council objection blocks',()=>{const p=base();p.findings=[{role:'RAT',severity:'critical',disposition:'open'}];assert.equal(evaluateCouncilPackage(p).decision,'BLOCKED')});
+test('critical accepted objection still blocks',()=>{const p=base();p.findings=[{role:'RAT',severity:'critical',disposition:'accepted'}];assert.equal(evaluateCouncilPackage(p).decision,'BLOCKED')});
+test('open major Council objection requires revision',()=>{const p=base();p.findings=[{role:'BOB',severity:'major',disposition:'open'}];assert.equal(evaluateCouncilPackage(p).decision,'REVISE')});
+test('missing Council review requires revision',()=>{const p=base();p.findings=[];assert.equal(evaluateCouncilPackage(p).decision,'REVISE')});
+test('false independent execution assertion rejected',()=>{const p=base();p.attestations=[{role:'RAT',status:'tested',independent:true}];assert.throws(()=>evaluateCouncilPackage(p))});
+test('traceable independent execution recorded without granting approval',()=>{const p=base();p.attestations=[{role:'RAT',status:'tested',independent:true,runId:'test-run',configurationVersion:'v1',evidenceRefs:['e1']}];const r=evaluateCouncilPackage(p);assert.equal(r.reviewed[0].independent,true);assert.equal(r.approvalGranted,false)});
+test('malformed package rejected',()=>assert.throws(()=>evaluateCouncilPackage({claims:[]})));
+test('attributed claim requires support',()=>{const p=base();p.claims=[{text:'Reported by company',status:'attributed',sources:[]}];assert.equal(evaluateCouncilPackage(p).decision,'BLOCKED')});

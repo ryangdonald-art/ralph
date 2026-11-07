@@ -1,0 +1,14 @@
+'use strict';
+const test=require('node:test');const assert=require('node:assert/strict');
+const {signReceipt,verifyReceipt,canonical}=require('../src/intelligence/execution-receipt');
+const key='a'.repeat(64);
+const receipt={runId:'r1',role:'RAT',configurationVersion:'v1',provider:'test-provider',providerRunId:'p1',completedAt:'2026-11-07T17:00:00Z'};
+test('valid internal signature verifies',()=>assert.equal(verifyReceipt(receipt,signReceipt(receipt,key),key),true));
+test('tampered role rejected',()=>assert.equal(verifyReceipt({...receipt,role:'BOB'},signReceipt(receipt,key),key),false));
+test('tampered provider run rejected',()=>assert.equal(verifyReceipt({...receipt,providerRunId:'p2'},signReceipt(receipt,key),key),false));
+test('tampered configuration rejected',()=>assert.equal(verifyReceipt({...receipt,configurationVersion:'v2'},signReceipt(receipt,key),key),false));
+test('invalid signature rejected',()=>assert.equal(verifyReceipt(receipt,'invalid',key),false));
+test('short signing key rejected',()=>assert.throws(()=>signReceipt(receipt,'short')));
+test('missing provider identity rejected',()=>assert.throws(()=>canonical({...receipt,provider:''})));
+test('invalid time rejected',()=>assert.throws(()=>canonical({...receipt,completedAt:'not-a-date'})));
+test('different key cannot validate',()=>assert.equal(verifyReceipt(receipt,signReceipt(receipt,key),'b'.repeat(64)),false));

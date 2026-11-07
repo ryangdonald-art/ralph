@@ -1,0 +1,11 @@
+'use strict';
+const test=require('node:test');const assert=require('node:assert/strict');
+const {validateCompletion}=require('../src/intelligence/lease-completion-guard');
+const task={tenantId:'A',leaseOwner:'w',leaseToken:2,state:'leased',leaseUntil:100};
+const baseline={task,tenantId:'A',workerId:'w',leaseToken:2,now:99,status:'completed'};
+test('valid completion',()=>assert.equal(validateCompletion(baseline),true));
+test('wrong tenant',()=>assert.equal(validateCompletion({...baseline,tenantId:'B'}),false));
+test('wrong worker',()=>assert.equal(validateCompletion({...baseline,workerId:'x'}),false));
+test('stale fencing token',()=>assert.equal(validateCompletion({...baseline,leaseToken:1}),false));
+test('expired lease',()=>assert.equal(validateCompletion({...baseline,now:100}),false));
+test('unapproved completion status',()=>assert.equal(validateCompletion({...baseline,status:'approved'}),false));

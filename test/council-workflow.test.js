@@ -1,0 +1,17 @@
+'use strict';
+const test=require('node:test');const assert=require('node:assert/strict');
+const {createCouncilWorkflow}=require('../src/intelligence/council-workflow');
+const {route}=require('../src/intelligence/council-registry');
+const source={id:'filing',title:'Filing',supports:true,independent:true};
+const input=()=>({kind:'editorial',brief:'Review story',configurations:Object.fromEntries(route('editorial').map(r=>[r,'v1'])),claims:[{text:'Claim',status:'verified',sources:[source]}],findings:[{role:'RAT',severity:'minor',disposition:'resolved'}]});
+const runner={run:async ({role})=>({role,status:'completed',runId:'id-'+role})};
+test('complete workflow is review ready, never approved',async()=>{const events=[];const r=await createCouncilWorkflow({runner,record:async x=>events.push(x)}).evaluate(input());assert.equal(r.decision,'REVIEW_READY');assert.equal(r.approvalGranted,false);assert.equal(events.length,route('editorial').length)});
+test('missing configuration blocks',async()=>{const p=input();delete p.configurations.RENEE;const r=await createCouncilWorkflow({runner,record:async()=>{}}).evaluate(p);assert.equal(r.decision,'BLOCKED');assert.equal(r.reason,'SPECIALIST_INCOMPLETE')});
+test('failed specialist blocks',async()=>{const r=await createCouncilWorkflow({runner:{run:async ({role})=>({role,status:role==='RAT'?'failed':'completed'})},record:async()=>{}}).evaluate(input());assert.equal(r.decision,'BLOCKED')});
+test('thrown specialist error blocks',async()=>{const r=await createCouncilWorkflow({runner:{run:async()=>{throw Error('secret')}},record:async()=>{}}).evaluate(input());assert.equal(r.decision,'BLOCKED');assert.equal(JSON.stringify(r).includes('secret'),false)});
+test('invalid result blocks',async()=>{const r=await createCouncilWorkflow({runner:{run:async()=>({role:'BOB',status:'completed'})},record:async()=>{}}).evaluate(input());assert.equal(r.decision,'BLOCKED')});
+test('evidence failure blocks',async()=>{const p=input();p.claims=[{text:'Bad',status:'verified',sources:[]}];const r=await createCouncilWorkflow({runner,record:async()=>{}}).evaluate(p);assert.equal(r.decision,'BLOCKED')});
+test('critical objection blocks',async()=>{const p=input();p.findings=[{role:'RAT',severity:'critical',disposition:'open'}];const r=await createCouncilWorkflow({runner,record:async()=>{}}).evaluate(p);assert.equal(r.decision,'BLOCKED')});
+test('invalid kind rejects',async()=>await assert.rejects(()=>createCouncilWorkflow({runner,record:async()=>{}}).evaluate({...input(),kind:'other'})));
+test('requires record callback',()=>assert.throws(()=>createCouncilWorkflow({runner})));
+test('requires runner',()=>assert.throws(()=>createCouncilWorkflow({record:async()=>{}})));
