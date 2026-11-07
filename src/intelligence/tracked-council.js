@@ -41,8 +41,8 @@ function createTrackedCouncil({runner,ledger,verifyProviderRun,clock=()=>new Dat
       let status='not_configured',errorCode=null,providerExecutionVerified=false;
       if(typeof version==='string'&&version.trim()){
         try{
-          const result=await runner.run({kind,role,brief,configurationVersion:version});
-          if(result&&result.role===role&&result.status==='completed'&&result.runId&&await verifyProviderRun({result,role,configurationVersion:version})===true){
+          const result=await runner.run({tenantId,runId,kind,role,brief,configurationVersion:version});
+          if(result&&result.role===role&&result.status==='completed'&&result.runId===runId&&await verifyProviderRun({result,tenantId,runId,role,configurationVersion:version})===true){
             status='completed';providerExecutionVerified=true;
           }else if(result&&result.role===role&&result.status==='completed'){
             status='unverified_execution';errorCode='PROVIDER_NOT_ATTESTED';
