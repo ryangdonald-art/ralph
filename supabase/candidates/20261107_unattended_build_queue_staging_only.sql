@@ -2,6 +2,7 @@
 -- Requires authenticated server-side worker identity and tenant-scoped RLS testing.
 create table if not exists public.ralph_build_tasks (
  id uuid primary key default gen_random_uuid(),
+ unique (id,tenant_id),
  tenant_id uuid not null,
  kind text not null check (kind in ('inspect','test','lint','document','prototype','draft_pr')),
  priority integer not null default 5 check (priority between 0 and 10),
@@ -20,15 +21,19 @@ create table if not exists public.ralph_build_tasks (
 );
 create index if not exists ralph_build_tasks_claim_idx on public.ralph_build_tasks(tenant_id,state,priority,created_at);
 create table if not exists public.ralph_build_task_dependencies (
- task_id uuid not null references public.ralph_build_tasks(id),
- depends_on_task_id uuid not null references public.ralph_build_tasks(id),
+ task_id uuid not null,
+ depends_on_task_id uuid not null,
+ tenant_id uuid not null,
+ foreign key (task_id,tenant_id) references public.ralph_build_tasks(id,tenant_id),
+ foreign key (depends_on_task_id,tenant_id) references public.ralph_build_tasks(id,tenant_id),
  primary key(task_id,depends_on_task_id),
  check (task_id <> depends_on_task_id)
 );
 create table if not exists public.ralph_build_task_events (
  id bigint generated always as identity primary key,
- task_id uuid not null references public.ralph_build_tasks(id),
+ task_id uuid not null,
  tenant_id uuid not null,
+ foreign key (task_id,tenant_id) references public.ralph_build_tasks(id,tenant_id),
  event_type text not null,
  lease_token bigint,
  recorded_at timestamptz not null default now(),
