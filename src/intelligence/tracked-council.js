@@ -20,9 +20,10 @@ function createLocalRunLedger(){
     list(){return events.map(e=>({...e}));}
   });
 }
-function createTrackedCouncil({runner,ledger,clock=()=>new Date().toISOString(),idFactory=()=>crypto.randomUUID()}={}){
+function createTrackedCouncil({runner,ledger,verifyProviderRun,clock=()=>new Date().toISOString(),idFactory=()=>crypto.randomUUID()}={}){
   if(!runner||typeof runner.run!=='function')throw new Error('Runner required');
   if(!ledger||typeof ledger.append!=='function')throw new Error('Ledger required');
+  if(typeof verifyProviderRun!=='function')throw new Error('Independent provider verifier required');
   if(typeof clock!=='function'||typeof idFactory!=='function')throw new Error('Clock and ID factory required');
   return {async evaluate({kind,brief,configurations,claims,findings,risk='ordinary'}={}){
     if(typeof brief!=='string'||!brief.trim())throw new Error('Brief required');
@@ -38,7 +39,7 @@ function createTrackedCouncil({runner,ledger,clock=()=>new Date().toISOString(),
       if(typeof version==='string'&&version.trim()){
         try{
           const result=await runner.run({kind,role,brief,configurationVersion:version});
-          if(result&&result.role===role&&result.status==='completed'&&result.providerExecutionVerified===true&&result.runId){
+          if(result&&result.role===role&&result.status==='completed'&&result.runId&&await verifyProviderRun({result,role,configurationVersion:version})===true){
             status='completed';providerExecutionVerified=true;
           }else if(result&&result.role===role&&result.status==='completed'){
             status='unverified_execution';errorCode='PROVIDER_NOT_ATTESTED';
