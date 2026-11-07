@@ -1,0 +1,12 @@
+'use strict';
+const test=require('node:test');const assert=require('node:assert/strict');
+const {selectReadyProvider}=require('../src/intelligence/ready-provider-router');
+const ready={credentialsPresent:true,approved:true,adapterTested:true,providerReceiptVerified:true,tenantSecurityTested:true};
+test('no available providers blocks',()=>assert.equal(selectReadyProvider({role:'RAT'}).status,'blocked'));
+test('available unapproved provider blocks',()=>assert.equal(selectReadyProvider({role:'RAT',available:['anthropic']}).status,'blocked'));
+test('approved but unverified provider blocks',()=>assert.equal(selectReadyProvider({role:'RAT',available:['anthropic'],approved:['anthropic']}).status,'blocked'));
+test('ready approved provider selected',()=>assert.equal(selectReadyProvider({role:'RAT',available:['anthropic'],approved:['anthropic'],readiness:{anthropic:ready}}).provider,'anthropic'));
+test('falls back when first provider not ready',()=>assert.equal(selectReadyProvider({role:'RAT',available:['anthropic','openai'],approved:['anthropic','openai'],readiness:{openai:ready}}).provider,'openai'));
+test('does not choose ready but unapproved provider',()=>assert.equal(selectReadyProvider({role:'RAT',available:['anthropic'],approved:[],readiness:{anthropic:ready}}).provider,null));
+test('does not choose ready but unavailable provider',()=>assert.equal(selectReadyProvider({role:'RAT',available:[],approved:['anthropic'],readiness:{anthropic:ready}}).provider,null));
+test('invalid specialist rejects',()=>assert.throws(()=>selectReadyProvider({role:'UNKNOWN'})));
