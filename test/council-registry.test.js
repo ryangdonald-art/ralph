@@ -1,0 +1,15 @@
+'use strict';
+const test=require('node:test');const assert=require('node:assert/strict');
+const {route,verifyAttestation,councilDecision}=require('../src/intelligence/council-registry');
+test('commercial includes BOB and RAT',()=>{assert(route('commercial').includes('BOB'));assert(route('commercial').includes('RAT'));});
+test('editorial includes RENEE PETALS NONO Story Architect',()=>{for(const n of ['RENEE','PETALS','NONO','STORY_ARCHITECT'])assert(route('editorial').includes(n));});
+test('physical includes FORGE FOUNDRY GRID',()=>{for(const n of ['FORGE','FOUNDRY','GRID'])assert(route('physical').includes(n));});
+test('material visual includes RAT',()=>assert(route('visual','material').includes('RAT')));
+test('unknown task rejected',()=>assert.throws(()=>route('unknown')));
+test('unknown specialist rejected',()=>assert.throws(()=>verifyAttestation({role:'INVENTED',status:'configured'})));
+test('untraced independent review rejected',()=>assert.throws(()=>verifyAttestation({role:'RAT',status:'tested',independent:true})));
+test('unsupported production claim rejected',()=>assert.throws(()=>verifyAttestation({role:'RAT',status:'production_verified'})));
+test('traced review accepted',()=>assert.equal(verifyAttestation({role:'RAT',status:'tested',independent:true,runId:'r1',configurationVersion:'v1',evidenceRefs:['s1']}),true));
+test('unresolved critical objection blocks',()=>assert.equal(councilDecision([{role:'RAT',severity:'critical',disposition:'accepted'}]),'BLOCKED'));
+test('open major objection requires revision',()=>assert.equal(councilDecision([{role:'BOB',severity:'major',disposition:'open'}]),'REVISE'));
+test('resolved finding only review ready',()=>assert.equal(councilDecision([{role:'RAT',severity:'critical',disposition:'resolved'}]),'REVIEW_READY'));
