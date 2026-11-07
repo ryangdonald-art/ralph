@@ -1,0 +1,16 @@
+'use strict';
+const test=require('node:test');const assert=require('node:assert/strict');
+const {evaluateBuildPolicy}=require('../src/intelligence/build-worker-policy');
+const caps={isolatedWorkspace:true,readOnlyProduction:true,noExternalPublish:true,noProductionDeploy:true,noPaidCalls:true,noSecretsInPrompt:true};
+const limits={maxRuntimeMs:120000,maxAttempts:2,maxCostUsd:0};
+const check=(overrides={})=>evaluateBuildPolicy({task:{kind:'test'},capabilities:caps,limits,...overrides});
+test('zero spend isolated test eligible',()=>assert.equal(check().allowed,true));
+test('unknown task rejected',()=>assert.equal(check({task:{kind:'deploy'}}).allowed,false));
+test('production deployment prohibited',()=>assert.equal(check({capabilities:{...caps,noProductionDeploy:false}}).allowed,false));
+test('missing isolation rejected',()=>assert.equal(check({capabilities:{...caps,isolatedWorkspace:false}}).allowed,false));
+test('missing secret protection rejected',()=>assert.equal(check({capabilities:{...caps,noSecretsInPrompt:false}}).allowed,false));
+test('paid execution rejected',()=>assert.equal(check({limits:{...limits,maxCostUsd:1}}).allowed,false));
+test('excessive runtime rejected',()=>assert.equal(check({limits:{...limits,maxRuntimeMs:3600000}}).allowed,false));
+test('excessive retries rejected',()=>assert.equal(check({limits:{...limits,maxAttempts:10}}).allowed,false));
+test('missing policy rejected',()=>assert.equal(check({capabilities:null}).allowed,false));
+test('external publishing prohibited',()=>assert.equal(check({capabilities:{...caps,noExternalPublish:false}}).allowed,false));
