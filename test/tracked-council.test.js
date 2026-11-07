@@ -46,3 +46,18 @@ test('invalid verifier result does not establish independent execution',async()=
   const {workflow}=mk({verifyProviderRun:async()=>({verified:true})});
   assert.equal((await workflow.evaluate(args())).decision,'BLOCKED');
 });
+
+test('malformed evidence is rejected before any adapter execution',async()=>{
+  let called=0;
+  const {workflow}=mk({runner:{run:async()=>{called++;return {role:'RENEE',status:'completed',runId:'p1'};}}});
+  const a=args();a.claims=[{text:'Invalid',status:'unknown',sources:[]}];
+  await assert.rejects(()=>workflow.evaluate(a),/Invalid evidence status/);
+  assert.equal(called,0);
+});
+test('missing findings rejected before adapter execution',async()=>{
+  let called=0;
+  const {workflow}=mk({runner:{run:async()=>{called++;return {};}}});
+  const a=args();delete a.findings;
+  await assert.rejects(()=>workflow.evaluate(a),/Claims, findings and attestations arrays required/);
+  assert.equal(called,0);
+});
