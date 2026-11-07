@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 const {createLocalRunLedger,createTrackedCouncil}=require('../src/intelligence/tracked-council');
 const {route}=require('../src/intelligence/council-registry');
 const evidence={text:'Documented statement',status:'verified',sources:[{id:'s1',title:'Original document',supports:true,independent:true}]};
-const args=()=>({kind:'editorial',brief:'Investigate',configurations:Object.fromEntries(route('editorial').map(r=>[r,'v1'])),claims:[evidence],findings:[{role:'RAT',severity:'minor',disposition:'resolved'}]});
+const args=()=>({tenantId:'dealworx-test',kind:'editorial',brief:'Investigate',configurations:Object.fromEntries(route('editorial').map(r=>[r,'v1'])),claims:[evidence],findings:[{role:'RAT',severity:'minor',disposition:'resolved'}]});
 const mk=(overrides={})=>{
   let n=0;const ledger=createLocalRunLedger();
   const runner={run:async ({role})=>({role,status:'completed',runId:'provider-'+role})};
@@ -60,4 +60,13 @@ test('missing findings rejected before adapter execution',async()=>{
   const a=args();delete a.findings;
   await assert.rejects(()=>workflow.evaluate(a),/Claims, findings and attestations arrays required/);
   assert.equal(called,0);
+});
+
+test('tracked Council requires tenant context',async()=>{
+  const {workflow}=mk();const a=args();delete a.tenantId;
+  await assert.rejects(()=>workflow.evaluate(a),/Tenant ID required/);
+});
+test('tracked Council records tenant context on each event',async()=>{
+  const {workflow,ledger}=mk();await workflow.evaluate(args());
+  assert(ledger.list().every(e=>e.tenantId==='dealworx-test'));
 });
