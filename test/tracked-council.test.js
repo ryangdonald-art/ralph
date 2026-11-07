@@ -7,7 +7,7 @@ const evidence={text:'Documented statement',status:'verified',sources:[{id:'s1',
 const args=()=>({tenantId:'dealworx-test',kind:'editorial',brief:'Investigate',configurations:Object.fromEntries(route('editorial').map(r=>[r,'v1'])),claims:[evidence],findings:[{role:'RAT',severity:'minor',disposition:'resolved'}]});
 const mk=(overrides={})=>{
   let n=0;const ledger=createLocalRunLedger();
-  const runner={run:async ({role})=>({role,status:'completed',runId:'provider-'+role})};
+  const runner={run:async ({role,runId})=>({role,status:'completed',runId})};
   return {ledger,workflow:createTrackedCouncil({runner,ledger,verifyProviderRun:async()=>true,idFactory:()=>String(++n),clock:()=> '2026-11-07T17:00:00Z',...overrides})};
 };
 test('records every required role and returns review ready but not approved',async()=>{
@@ -69,4 +69,17 @@ test('tracked Council requires tenant context',async()=>{
 test('tracked Council records tenant context on each event',async()=>{
   const {workflow,ledger}=mk();await workflow.evaluate(args());
   assert(ledger.list().every(e=>e.tenantId==='dealworx-test'));
+});
+
+test('provider result with mismatched run ID is never verified',async()=>{
+ const {workflow}=mk({runner:{run:async ({role})=>({role,status:'completed',runId:'other-run'})}});
+ assert.equal((await workflow.evaluate(args())).decision,'BLOCKED');
+});
+test('provider verifier receives exact tenant and generated run ID',async()=>{
+ let checked=0;
+ const {workflow}=mk({verifyProviderRun:async ({tenantId,runId,result})=>{
+   assert.equal(tenantId,'dealworx-test');assert.equal(runId,result.runId);checked++;return true;
+ }});
+ assert.equal((await workflow.evaluate(args())).decision,'REVIEW_READY');
+ assert.equal(checked,route('editorial').length);
 });
