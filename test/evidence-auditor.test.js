@@ -1,0 +1,14 @@
+'use strict';
+const test=require('node:test');const assert=require('node:assert/strict');
+const {auditClaim,auditDossier}=require('../src/intelligence/evidence-auditor');
+const source={id:'s1',title:'Official filing',supports:true,independent:true};
+test('verified claim with independent source passes',()=>assert.equal(auditClaim({text:'Revenue was R10m',status:'verified',sources:[source]}).pass,true));
+test('verified claim without support fails',()=>assert(auditClaim({text:'X',status:'verified',sources:[]}).defects.includes('VERIFIED_WITHOUT_SUPPORT')));
+test('verified claim without independent support fails',()=>assert(auditClaim({text:'X',status:'verified',sources:[{...source,independent:false}]}).defects.includes('VERIFIED_WITHOUT_INDEPENDENT_SUPPORT')));
+test('attribution requires source',()=>assert.equal(auditClaim({text:'X',status:'attributed',sources:[]}).pass,false));
+test('inference may have no source but remains inference',()=>assert.equal(auditClaim({text:'X',status:'inference',sources:[]}).pass,true));
+test('duplicate IDs flagged',()=>assert(auditClaim({text:'X',status:'verified',sources:[source,source]}).defects.includes('DUPLICATE_SOURCE_ID')));
+test('unknown status rejected',()=>assert.throws(()=>auditClaim({text:'X',status:'magic',sources:[]})));
+test('missing claim rejected',()=>assert.throws(()=>auditClaim({text:'',status:'verified',sources:[]})));
+test('malformed source rejected',()=>assert.throws(()=>auditClaim({text:'X',status:'verified',sources:[{}]})));
+test('dossier reports failures',()=>assert.equal(auditDossier([{text:'X',status:'verified',sources:[]},{text:'Y',status:'verified',sources:[source]}]).failures,1));
