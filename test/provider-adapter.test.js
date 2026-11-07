@@ -1,0 +1,17 @@
+'use strict';
+const test=require('node:test');const assert=require('node:assert/strict');
+const {createProviderAdapter}=require('../src/intelligence/provider-adapter');
+const config={model:'test-model',version:'v1'};
+const req={tenantId:'tenant-a',runId:'r1',role:'RAT',brief:'Challenge a claim'};
+const response={runId:'r1',role:'RAT',providerRunId:'provider-123',summary:'Needs verification',evidenceRefs:[]};
+const adapter=(overrides={})=>createProviderAdapter({provider:'anthropic',configuration:config,authorize:async()=>true,transport:async()=>response,...overrides});
+test('valid response remains unverified until independent attestation',async()=>{const r=await adapter().execute(req);assert.equal(r.status,'completed');assert.equal(r.providerExecutionVerified,false);assert.equal(r.providerRunId,'provider-123')});
+test('provider approval failure rejects before transport',async()=>{let called=0;const a=adapter({authorize:async()=>false,transport:async()=>{called++;return response}});await assert.rejects(()=>a.execute(req),/not authorized/);assert.equal(called,0)});
+test('missing tenant rejected',async()=>await assert.rejects(()=>adapter().execute({...req,tenantId:''})));
+test('wrong run ID response rejected',async()=>assert.equal((await adapter({transport:async()=>({...response,runId:'r2'})}).execute(req)).status,'failed'));
+test('wrong specialist role response rejected',async()=>assert.equal((await adapter({transport:async()=>({...response,role:'BOB'})}).execute(req)).status,'failed'));
+test('missing provider response ID rejected',async()=>assert.equal((await adapter({transport:async()=>({...response,providerRunId:''})}).execute(req)).status,'failed'));
+test('transport errors do not leak secrets',async()=>{const r=await adapter({transport:async()=>{throw Error('private credential')}}).execute(req);assert.equal(r.status,'failed');assert.equal(JSON.stringify(r).includes('private credential'),false)});
+test('unknown provider rejected',()=>assert.throws(()=>createProviderAdapter({provider:'unknown',configuration:config,transport:async()=>{},authorize:async()=>true})));
+test('model config required',()=>assert.throws(()=>createProviderAdapter({provider:'openai',configuration:{},transport:async()=>{},authorize:async()=>true})));
+test('authorization callback required',()=>assert.throws(()=>createProviderAdapter({provider:'openai',configuration:config,transport:async()=>{}})));
