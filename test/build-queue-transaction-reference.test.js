@@ -1,0 +1,12 @@
+'use strict';
+const test=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const path=require('node:path');
+const sql=fs.readFileSync(path.join(__dirname,'../supabase/candidates/20261107_worker_claim_complete_reference.sql'),'utf8');
+const schema=fs.readFileSync(path.join(__dirname,'../supabase/candidates/20261107_unattended_build_queue_staging_only.sql'),'utf8');
+test('claim uses row locking to prevent simultaneous selection',()=>assert.match(sql,/for update skip locked/i));
+test('claim increments fencing token',()=>assert.match(sql,/lease_token=t\.lease_token\+1/i));
+test('claim caps attempts',()=>assert.match(sql,/attempts < max_attempts/i));
+test('claim checks dependency completion',()=>assert.match(sql,/prerequisite\.state<>'completed'/i));
+test('completion matches exact worker and token',()=>{assert.match(sql,/t\.lease_owner=\$3/i);assert.match(sql,/t\.lease_token=\$4/i)});
+test('completion rejects expired leases',()=>assert.match(sql,/t\.lease_until>now\(\)/i));
+test('claim and completion log events',()=>assert.match(sql,/insert into public\.ralph_build_task_events/g));
+test('dependency table is present and default-deny',()=>{assert.match(schema,/create table if not exists public\.ralph_build_task_dependencies/i);assert.match(schema,/alter table public\.ralph_build_task_dependencies enable row level security/i);assert.match(schema,/revoke all on public\.ralph_build_task_dependencies from anon, authenticated/i)});
